@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Navbar from "@/components/Navbar";
 
 // The animated text component
 function AnimatedText({ blast }: { blast: boolean }) {
@@ -173,6 +174,17 @@ function AnimatedText({ blast }: { blast: boolean }) {
             opacity: 1;
           }
         }
+
+        @keyframes secondaryFade {
+          0% { opacity: 0; transform: translate3d(0, 0, 0); }
+          75% { opacity: 0.1; transform: translate3d(0, 0, 0); }
+          100% { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+
+        @keyframes secondaryGlideShift {
+          0% { opacity: 1; transform: translate3d(0, 0, 0); }
+          100% { opacity: 1; transform: translate3d(0, -180px, 0); }
+        }
       `}} />
     </div>
   );
@@ -268,6 +280,12 @@ export default function Home() {
   const [unmountIntro, setUnmountIntro] = useState(false);
   const [showExpansion, setShowExpansion] = useState(false);
   const [showTan, setShowTan] = useState(false);
+  const [showPetGrid, setShowPetGrid] = useState(false);
+  const [showNavbar, setShowNavbar] = useState(false);
+  const [showSecondaryText, setShowSecondaryText] = useState(false);
+  const [showSecondaryExit, setShowSecondaryExit] = useState(false);
+  const [showHero, setShowHero] = useState(false);
+  const [activeWordIndex, setActiveWordIndex] = useState(0);
 
   // Lifted Cursor State
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
@@ -298,13 +316,47 @@ export default function Home() {
   useEffect(() => {
     if (isClicked) {
       setShowExpansion(true);
-      const tanTimer = setTimeout(() => setShowTan(true), 500);
+      const tanTimer = setTimeout(() => setShowTan(true), 1000);
+
+      // Start Navbar animation at 1120ms to finish at 1720ms (600ms duration)
+      // This is 100ms before the PetGrid starts appearing at 1820ms.
+      const navTimer = setTimeout(() => setShowNavbar(true), 1120);
+
+      // Start Secondary Text at 1120ms (600ms duration) to align with Navbar
+      const secondaryTimer = setTimeout(() => setShowSecondaryText(true), 1120);
+
+      // Transition to Hero: Exit Secondary Text and Fade In Hero at 2720ms (1000ms after completion)
+      const exitTimer = setTimeout(() => setShowSecondaryExit(true), 2720);
+      const heroTimer = setTimeout(() => setShowHero(true), 2720);
+
+      // Endless Word Loop starting shortly after Hero fade-in
+      let wordInterval: NodeJS.Timeout;
+      const startLoopTimer = setTimeout(() => {
+        wordInterval = setInterval(() => {
+          setActiveWordIndex(prev => (prev + 1) % 3);
+        }, 3000); // Slowed down for better readability
+      }, 3020);
+
+      // Start PetGrid morph at 1820ms to finish at 2820ms (1000ms duration)
+      const gridTimer = setTimeout(() => setShowPetGrid(true), 1820);
+
+      // Unmount ripples exactly after they finish expansion (320ms stagger + 2400ms duration)
+      const rippleTimer = setTimeout(() => setShowExpansion(false), 2800);
+
       const unmountTimer = setTimeout(() => {
-        setShowExpansion(false);
         setUnmountIntro(true);
-      }, 2800);
+      }, 4000); // Extended to 4s to ensure hero transitions are fully established
+
       return () => {
         clearTimeout(tanTimer);
+        clearTimeout(navTimer);
+        clearTimeout(secondaryTimer);
+        clearTimeout(exitTimer);
+        clearTimeout(heroTimer);
+        clearTimeout(startLoopTimer);
+        if (wordInterval) clearInterval(wordInterval);
+        clearTimeout(gridTimer);
+        clearTimeout(rippleTimer);
         clearTimeout(unmountTimer);
       };
     }
@@ -335,7 +387,81 @@ export default function Home() {
         transition: isClicked ? 'background-color 2400ms ease-in-out 320ms' : 'none'
       }}
     >
+      <Navbar show={showNavbar} />
       <PawCursor trailingPos={trailingPos} showTan={showTan} />
+
+      {/* Secondary Hero Text - Fades in then glides out */}
+      <div
+        className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[170]"
+        style={{
+          opacity: 0,
+          animation: showSecondaryExit
+            ? 'secondaryGlideShift 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards'
+            : (showSecondaryText ? 'secondaryFade 600ms ease-out forwards' : 'none'),
+          willChange: 'opacity, transform',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden'
+        }}
+      >
+        <div className="flex flex-col items-center gap-2">
+          <h2 className="text-4xl md:text-6xl font-black text-white text-center drop-shadow-[0_4px_16px_rgba(0,0,0,0.5)] tracking-tight">
+            Coffee for you,
+          </h2>
+          <h2 className="text-4xl md:text-6xl font-black text-white text-center drop-shadow-[0_4px_16px_rgba(0,0,0,0.5)] tracking-tight">
+            Tea for your pet
+          </h2>
+        </div>
+      </div>
+
+      {/* Main Hero Paragraph and Word Loop */}
+      <div
+        className={`absolute inset-0 flex items-center justify-center pointer-events-none z-[170] px-6 transition-opacity duration-[1500ms]
+          ${showHero ? 'opacity-100' : 'opacity-0'}`}
+        style={{ transform: 'translateY(80px)' }}
+      >
+        <div className="max-w-4xl text-center">
+          <p className="text-2xl md:text-3xl font-bold text-white leading-relaxed drop-shadow-lg">
+            PawMatch is a friendly meetup club where pets and{" "}
+            <br className="hidden md:block" />
+            their humans come together to{" "}
+            <span className="inline-block relative h-[1.1em] w-[4.6em] top-[0.19em] overflow-hidden ml-0.7">
+              {[
+                { word: 'relax', color: '#39FF14' },
+                { word: 'socialize', color: '#00BFFF' },
+                { word: 'enjoy', color: '#FF007F' }
+              ].map((item, i) => (
+                <span
+                  key={item.word}
+                  className="absolute left-0 w-full h-full flex items-center justify-start transition-all duration-800 ease-in-out"
+                  style={{
+                    color: item.color,
+                    textShadow: item.shadow,
+                    transform: `translateY(${(i - activeWordIndex) * 100}%)`,
+                    opacity: i === activeWordIndex ? 1 : 0
+                  }}
+                >
+                  {item.word}.
+                </span>
+              ))}
+            </span>
+          </p>
+          <p className="text-2xl md:text-3xl font-bold text-white leading-relaxed drop-shadow-lg mt-4">
+            Bring your companion, meet fellow animal lovers,{" "}
+            <br className="hidden md:block" />
+            and let the paws do the talking.
+          </p>
+        </div>
+      </div>
+
+      {/* PetGrid Reveal - Promoted to z-[160] so it fades in OVER the ripples/morph */}
+      <div
+        className={`absolute inset-0 transition-opacity duration-[1000ms] ease-in-out pointer-events-none z-[160] ${showPetGrid ? 'opacity-100' : 'opacity-0'}`}
+        style={{
+          backgroundImage: `url('/PetGrid4.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
 
       {/* Ripple Expansion Overlay */}
       {showExpansion && (
