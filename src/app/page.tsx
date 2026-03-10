@@ -160,51 +160,33 @@ function AnimatedText({ blast }: { blast: boolean }) {
           0% { width: 0; }
           100% { width: 1.315em; }
         }
+
+        @keyframes rippleExpand {
+          0% {
+            transform: translate(-50%, -50%) scale(0.1);
+            background-color: var(--ripple-start-color, #FFFFFF);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(150);
+            background-color: #022009;
+            opacity: 1;
+          }
+        }
       `}} />
     </div>
   );
 }
 
 // Custom Paw Cursor
-function PawCursor() {
-  const [position, setPosition] = useState({ x: -100, y: -100 });
-  const [trailingPos, setTrailingPos] = useState({ x: -100, y: -100 });
-
-  useEffect(() => {
-    let frame: number;
-    const handleMouseMove = (e: MouseEvent) => {
-      setPosition({ x: e.clientX, y: e.clientY });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-
-    const animateTrailing = () => {
-      setTrailingPos(prev => {
-        const dx = position.x - prev.x;
-        const dy = position.y - prev.y;
-        // smooth follow easing (0.15 is the speed)
-        return {
-          x: prev.x + dx * 0.15,
-          y: prev.y + dy * 0.15,
-        };
-      });
-      frame = requestAnimationFrame(animateTrailing);
-    };
-
-    frame = requestAnimationFrame(animateTrailing);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      cancelAnimationFrame(frame);
-    };
-  }, [position]);
-
+function PawCursor({ trailingPos, showTan }: { trailingPos: { x: number, y: number }, showTan: boolean }) {
   return (
     <div
-      className="fixed top-0 left-0 pointer-events-none z-[100]"
+      className="fixed top-0 left-0 pointer-events-none z-[200] transition-colors duration-500"
       style={{
         transform: `translate(${trailingPos.x}px, ${trailingPos.y}px)`,
-        color: '#410202'
+        color: showTan ? '#C29B6D' : '#410202',
+        opacity: 1
       }}
     >
       {/* Offset slightly so the mouse cursor is at the center of the paw */}
@@ -220,7 +202,13 @@ function SeamlessLoop({ onLoopComplete }: { onLoopComplete: () => void }) {
   const [activeVid, setActiveVid] = useState<1 | 2>(1);
 
   useEffect(() => {
-    if (vid1Ref.current) vid1Ref.current.play().catch(e => console.error(e));
+    const safePlay = (video: HTMLVideoElement | null) => {
+      if (!video) return;
+      video.play().catch(() => {
+        // Ignore power-saving/autoplay aborts to avoid noisy console errors.
+      });
+    };
+    safePlay(vid1Ref.current);
   }, []);
 
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
@@ -228,45 +216,41 @@ function SeamlessLoop({ onLoopComplete }: { onLoopComplete: () => void }) {
     const current = video.currentTime;
     const duration = video.duration || 1;
 
-    // Start crossfading exactly 1000ms (1.0s) before to match the new transition
-    if (duration > 1 && duration - current <= 1.0) {
+    // Disable loop updates if we've clicked (to prevent text reset mid-transition)
+    // Disable loop updates if we've clicked (to prevent text reset mid-transition)
+    if (duration > 1.5 && duration - current <= 1.5) {
       if (activeVid === 1 && vid2Ref.current && vid2Ref.current.paused) {
         setActiveVid(2);
         vid2Ref.current.currentTime = 0;
-        vid2Ref.current.play().catch(err => console.error(err));
+        vid2Ref.current.play().catch(() => { });
         onLoopComplete();
       } else if (activeVid === 2 && vid1Ref.current && vid1Ref.current.paused) {
         setActiveVid(1);
         vid1Ref.current.currentTime = 0;
-        vid1Ref.current.play().catch(err => console.error(err));
+        vid1Ref.current.play().catch(() => { });
         onLoopComplete();
       }
     }
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-black -z-50 overflow-hidden">
-      {/* 
-        To prevent the screen from dimming during the crossfade, we ALWAYS keep the 
-        incoming video fully opaque at the bottom, and only fade out the outgoing 
-        video on top of it.
-      */}
+    <div className="fixed inset-0 w-full h-full bg-black -z-50 overflow-hidden pointer-events-none">
       <video
         ref={vid1Ref}
         src="/Loop0.mp4"
         className={`absolute inset-0 w-full h-full object-cover ${activeVid === 1
-          ? 'opacity-100 z-0 transition-none filter-none'
-          : 'opacity-0 z-10 transition-opacity duration-1000 ease-in-out'
+          ? "opacity-100 z-0 transition-none filter-none"
+          : "opacity-0 z-10 transition-opacity duration-1000 ease-in-out"
           }`}
-        muted playsInline preload="auto"
+        autoPlay muted playsInline preload="auto"
         onTimeUpdate={activeVid === 1 ? handleTimeUpdate : undefined}
       />
       <video
         ref={vid2Ref}
         src="/Loop0.mp4"
         className={`absolute inset-0 w-full h-full object-cover ${activeVid === 2
-          ? 'opacity-100 z-0 transition-none filter-none'
-          : 'opacity-0 z-10 transition-opacity duration-1000 ease-in-out'
+          ? "opacity-100 z-0 transition-none filter-none"
+          : "opacity-0 z-10 transition-opacity duration-1000 ease-in-out"
           }`}
         muted playsInline preload="auto"
         onTimeUpdate={activeVid === 2 ? handleTimeUpdate : undefined}
@@ -279,6 +263,52 @@ function SeamlessLoop({ onLoopComplete }: { onLoopComplete: () => void }) {
 export default function Home() {
   const [blast, setBlast] = useState(false);
   const [loopIndex, setLoopIndex] = useState(0);
+  const [isClicked, setIsClicked] = useState(false);
+  const [clickPos, setClickPos] = useState({ x: 0, y: 0 });
+  const [unmountIntro, setUnmountIntro] = useState(false);
+  const [showExpansion, setShowExpansion] = useState(false);
+  const [showTan, setShowTan] = useState(false);
+
+  // Lifted Cursor State
+  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
+  const [trailingPos, setTrailingPos] = useState({ x: -100, y: -100 });
+
+  useEffect(() => {
+    let frame: number;
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    const animateTrailing = () => {
+      setTrailingPos(prev => ({
+        x: prev.x + (mousePos.x - prev.x) * 0.15,
+        y: prev.y + (mousePos.y - prev.y) * 0.15,
+      }));
+      frame = requestAnimationFrame(animateTrailing);
+    };
+    frame = requestAnimationFrame(animateTrailing);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(frame);
+    };
+  }, [mousePos]);
+
+  useEffect(() => {
+    if (isClicked) {
+      setShowExpansion(true);
+      const tanTimer = setTimeout(() => setShowTan(true), 500);
+      const unmountTimer = setTimeout(() => {
+        setShowExpansion(false);
+        setUnmountIntro(true);
+      }, 2800);
+      return () => {
+        clearTimeout(tanTimer);
+        clearTimeout(unmountTimer);
+      };
+    }
+  }, [isClicked]);
 
   const handleLoopComplete = () => {
     setBlast(true);
@@ -289,11 +319,64 @@ export default function Home() {
     }, 2000);
   };
 
+  const handleGlobalClick = (e: React.MouseEvent) => {
+    if (isClicked) return;
+    setIsClicked(true);
+    // Use trailingPos for visual lock with paw, not raw mouse e.clientX
+    setClickPos({ x: trailingPos.x, y: trailingPos.y });
+  };
+
   return (
-    <main className="relative min-h-screen w-full overflow-hidden flex items-center justify-center cursor-none">
-      <PawCursor />
-      <SeamlessLoop onLoopComplete={handleLoopComplete} />
-      <AnimatedText key={loopIndex} blast={blast} />
+    <main
+      onClick={handleGlobalClick}
+      className="relative min-h-screen w-full overflow-hidden flex items-center justify-center cursor-none z-0"
+      style={{
+        backgroundColor: isClicked ? '#022009' : 'black',
+        transition: isClicked ? 'background-color 2400ms ease-in-out 320ms' : 'none'
+      }}
+    >
+      <PawCursor trailingPos={trailingPos} showTan={showTan} />
+
+      {/* Ripple Expansion Overlay */}
+      {showExpansion && (
+        <div
+          className="fixed pointer-events-none z-[150] flex items-center justify-center transform-gpu"
+          style={{
+            left: clickPos.x,
+            top: clickPos.y,
+            width: 0,
+            height: 0,
+          }}
+        >
+          {[
+            { delay: 0, color: '#FFFFFF' },
+            { delay: 80, color: '#C0C7C2' },
+            { delay: 160, color: '#818F84' },
+            { delay: 240, color: '#415846' },
+            { delay: 320, color: '#022009' }
+          ].map((ripple, i) => (
+            <div
+              key={`ripple-${i}`}
+              className="absolute rounded-full"
+              style={{
+                width: '120px',
+                height: '120px',
+                animation: `rippleExpand 2.4s cubic-bezier(0.7, 0, 0.3, 1) ${ripple.delay}ms forwards`,
+                willChange: 'transform, background-color, opacity',
+                transformOrigin: 'center',
+                ['--ripple-start-color' as any]: ripple.color,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {!unmountIntro && (
+        <>
+          <SeamlessLoop onLoopComplete={handleLoopComplete} />
+          <AnimatedText key={loopIndex} blast={blast} />
+        </>
+      )}
     </main>
   );
 }
