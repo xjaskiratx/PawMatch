@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
+import DiagonalEncounter from "@/components/DiagonalEncounter";
+import CinematicDogs from "@/components/CinematicDogs";
 
 // The animated text component
 function AnimatedText({ blast }: { blast: boolean }) {
@@ -145,45 +147,18 @@ function AnimatedText({ blast }: { blast: boolean }) {
           20% { opacity: 1; }
           100% { transform: translate3d(0, 0, 0); opacity: 1; }
         }
-
         @keyframes softFade {
           0% { opacity: 1; filter: blur(0px); }
           100% { opacity: 0; filter: blur(4px); transform: scale(0.98); }
         }
-
         @keyframes slideUpExit {
           0% { transform: translate3d(0, 0, 0); opacity: 1; }
           60% { opacity: 1; }
           100% { transform: translate3d(0, -150%, 0); opacity: 0; }
         }
-
         @keyframes extraWidthExpand {
           0% { width: 0; }
           100% { width: 1.315em; }
-        }
-
-        @keyframes rippleExpand {
-          0% {
-            transform: translate(-50%, -50%) scale(0.1);
-            background-color: var(--ripple-start-color, #FFFFFF);
-            opacity: 1;
-          }
-          100% {
-            transform: translate(-50%, -50%) scale(150);
-            background-color: #022009;
-            opacity: 1;
-          }
-        }
-
-        @keyframes secondaryFade {
-          0% { opacity: 0; transform: translate3d(0, 0, 0); }
-          75% { opacity: 0.1; transform: translate3d(0, 0, 0); }
-          100% { opacity: 1; transform: translate3d(0, 0, 0); }
-        }
-
-        @keyframes secondaryGlideShift {
-          0% { opacity: 1; transform: translate3d(0, 0, 0); }
-          100% { opacity: 1; transform: translate3d(0, -180px, 0); }
         }
       `}} />
     </div>
@@ -286,6 +261,21 @@ export default function Home() {
   const [showSecondaryExit, setShowSecondaryExit] = useState(false);
   const [showHero, setShowHero] = useState(false);
   const [activeWordIndex, setActiveWordIndex] = useState(0);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [startBobbing, setStartBobbing] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+
+  // Scroll Tracking
+  useEffect(() => {
+    if (!showSwipeHint) return;
+
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [showSwipeHint]);
 
   // Lifted Cursor State
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
@@ -334,18 +324,29 @@ export default function Home() {
       const startLoopTimer = setTimeout(() => {
         wordInterval = setInterval(() => {
           setActiveWordIndex(prev => (prev + 1) % 3);
-        }, 3000); // Slowed down for better readability
+        }, 2000); // Slowed down for better readability
       }, 3020);
 
       // Start PetGrid morph at 1820ms to finish at 2820ms (1000ms duration)
       const gridTimer = setTimeout(() => setShowPetGrid(true), 1820);
 
+      // Swipe Up Hint: 3s after hero entry (5720ms)
+      const swipeTimer = setTimeout(() => {
+        console.log("Showing Swipe Hint at 5720ms");
+        setShowSwipeHint(true);
+      }, 5720);
+      const bobTimer = setTimeout(() => {
+        console.log("Starting Bobbing at 6520ms");
+        setStartBobbing(true);
+      }, 6520); // Starts after 800ms slide-up completes
+
       // Unmount ripples exactly after they finish expansion (320ms stagger + 2400ms duration)
       const rippleTimer = setTimeout(() => setShowExpansion(false), 2800);
 
       const unmountTimer = setTimeout(() => {
+        console.log("Unmounting Intro at 4000ms");
         setUnmountIntro(true);
-      }, 4000); // Extended to 4s to ensure hero transitions are fully established
+      }, 4000); // Reduced to 4s: as soon as ripples finish and forest green is solid
 
       return () => {
         clearTimeout(tanTimer);
@@ -356,6 +357,8 @@ export default function Home() {
         clearTimeout(startLoopTimer);
         if (wordInterval) clearInterval(wordInterval);
         clearTimeout(gridTimer);
+        clearTimeout(swipeTimer);
+        clearTimeout(bobTimer);
         clearTimeout(rippleTimer);
         clearTimeout(unmountTimer);
       };
@@ -384,23 +387,61 @@ export default function Home() {
       className="relative min-h-screen w-full overflow-hidden flex items-center justify-center cursor-none z-0"
       style={{
         backgroundColor: isClicked ? '#022009' : 'black',
-        transition: isClicked ? 'background-color 2400ms ease-in-out 320ms' : 'none'
+        transition: isClicked ? 'background-color 2400ms ease-in-out 320ms' : 'none',
+        minHeight: showHero ? 'calc(100vh + 800px)' : '100vh'
       }}
     >
+      {/* Persistent Global Animation Definitions */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes rippleExpand {
+          0% {
+            transform: translate(-50%, -50%) scale(0.1);
+            background-color: var(--ripple-start-color, #FFFFFF);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(150);
+            background-color: #022009;
+            opacity: 1;
+          }
+        }
+        @keyframes secondaryFade {
+          0% { opacity: 0; transform: translate3d(0, 0, 0); }
+          75% { opacity: 0.1; transform: translate3d(0, 0, 0); }
+          100% { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+        @keyframes secondaryGlideShift {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(0, -180px, 0); }
+        }
+        @keyframes swipeBob {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-swipeBob {
+          animation: swipeBob 3000ms ease-in-out infinite;
+        }
+      `}} />
+
       <Navbar show={showNavbar} />
       <PawCursor trailingPos={trailingPos} showTan={showTan} />
 
       {/* Secondary Hero Text - Fades in then glides out */}
+      {/* Secondary Hero Text - Fades in then glides out */}
       <div
-        className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[170]"
+        className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none z-[170]"
         style={{
-          opacity: 0,
+          opacity: showHero ? (scrollY > 550 ? Math.max(0.4 - (scrollY - 550) / 125, 0) : (scrollY > 300 ? Math.max(1 - (scrollY - 300) / 416, 0.4) : 1)) : 0,
           animation: showSecondaryExit
             ? 'secondaryGlideShift 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards'
             : (showSecondaryText ? 'secondaryFade 600ms ease-out forwards' : 'none'),
-          willChange: 'opacity, transform',
+          willChange: 'opacity, filter, transform',
           WebkitBackfaceVisibility: 'hidden',
-          backfaceVisibility: 'hidden'
+          backfaceVisibility: 'hidden',
+          filter: `blur(${scrollY > 200 ? Math.min((scrollY - 200) / 20, 10) : 0}px)`,
+          transition: scrollY === 0 ? 'opacity 800ms ease-out, filter 800ms ease-out' : 'none',
+          transform: `translateY(${scrollY > 550 ? -((scrollY - 550) * 10) : 0}px)`
         }}
       >
         <div className="flex flex-col items-center gap-2">
@@ -415,12 +456,24 @@ export default function Home() {
 
       {/* Main Hero Paragraph and Word Loop */}
       <div
-        className={`absolute inset-0 flex items-center justify-center pointer-events-none z-[170] px-6 transition-opacity duration-[1500ms]
-          ${showHero ? 'opacity-100' : 'opacity-0'}`}
-        style={{ transform: 'translateY(80px)' }}
+        className={`fixed inset-0 flex items-center justify-center pointer-events-none z-[170] px-6 ${showHero ? 'opacity-100' : 'opacity-0'}`}
+        style={{
+          transform: 'translateY(80px)',
+          filter: `blur(${scrollY > 200 ? Math.min((scrollY - 200) / 20, 10) : 0}px)`,
+          opacity: showHero ? (scrollY > 550 ? Math.max(0.4 - (scrollY - 550) / 125, 0) : (scrollY > 300 ? Math.max(1 - (scrollY - 300) / 416, 0.4) : 1)) : 0,
+          willChange: 'opacity, filter',
+          transition: scrollY === 0 ? 'opacity 1200ms ease-out 200ms, filter 1200ms ease-out' : 'none'
+        }}
       >
-        <div className="max-w-4xl text-center">
-          <p className="text-2xl md:text-3xl font-bold text-white leading-relaxed drop-shadow-lg">
+        <div className="max-w-4xl text-center flex flex-col gap-4">
+          {/* Part 1: Rockets Left */}
+          <p
+            className="text-2xl md:text-3xl font-bold text-white leading-relaxed drop-shadow-lg"
+            style={{
+              transform: `translateX(${scrollY > 550 ? -((scrollY - 550) * 20) : 0}px)`,
+              opacity: scrollY > 550 ? Math.max(0.4 - (scrollY - 550) / 125, 0) : 1
+            }}
+          >
             PawMatch is a friendly meetup club where pets and{" "}
             <br className="hidden md:block" />
             their humans come together to{" "}
@@ -432,10 +485,9 @@ export default function Home() {
               ].map((item, i) => (
                 <span
                   key={item.word}
-                  className="absolute left-0 w-full h-full flex items-center justify-start transition-all duration-800 ease-in-out"
+                  className="absolute left-0 w-full h-full flex items-center justify-start transition-all duration-1000 ease-in-out"
                   style={{
                     color: item.color,
-                    textShadow: item.shadow,
                     transform: `translateY(${(i - activeWordIndex) * 100}%)`,
                     opacity: i === activeWordIndex ? 1 : 0
                   }}
@@ -445,23 +497,59 @@ export default function Home() {
               ))}
             </span>
           </p>
-          <p className="text-2xl md:text-3xl font-bold text-white leading-relaxed drop-shadow-lg mt-4">
-            Bring your companion, meet fellow animal lovers,{" "}
+
+          {/* Part 2: Rockets Right */}
+          <p
+            className="text-2xl md:text-3xl font-bold text-white leading-relaxed drop-shadow-lg"
+            style={{
+              transform: `translateX(${scrollY > 550 ? ((scrollY - 550) * 20) : 0}px)`,
+              opacity: scrollY > 550 ? Math.max(0.4 - (scrollY - 550) / 125, 0) : 1
+            }}
+          >
+            Bring your companion and connect with fellow{" "}
             <br className="hidden md:block" />
-            and let the paws do the talking.
+            pet lovers overs coffee, easy chats and wagging tails.
           </p>
+        </div>
+      </div>
+
+      {/* Swipe Up Hint - Isolated bobbing from centering to avoid transform conflicts */}
+      <div className="fixed bottom-[72px] left-1/2 -translate-x-1/2 pointer-events-none z-[170]">
+        <div
+          className={`transition-all duration-[800ms] ease-out ${showSwipeHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'
+            }`}
+          style={{ opacity: showSwipeHint ? Math.max(1 - scrollY / 100, 0) : 0 }}
+        >
+          <div className={startBobbing ? 'animate-swipeBob' : ''}>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-white/60 text-sm font-bold tracking-widest uppercase mb-1 drop-shadow-md">
+                Swipe up for more
+              </span>
+              <span className="material-symbols-outlined text-white/40 text-2xl">
+                keyboard_double_arrow_up
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* PetGrid Reveal - Promoted to z-[160] so it fades in OVER the ripples/morph */}
       <div
-        className={`absolute inset-0 transition-opacity duration-[1000ms] ease-in-out pointer-events-none z-[160] ${showPetGrid ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 transition-opacity duration-[1000ms] ease-in-out pointer-events-none z-[160] ${showPetGrid ? 'opacity-100' : 'opacity-0'}`}
         style={{
           backgroundImage: `url('/PetGrid4.jpg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          filter: `blur(${scrollY > 50 ? Math.min((scrollY - 50) / 40, 10) : 0}px)`,
+          opacity: showPetGrid ? (scrollY >= 600 ? 0 : Math.max(1 - scrollY / 600, 0)) : 0
         }}
       />
+
+      {/* Diagonal Pet Encounter — triggered after rocket split */}
+      <DiagonalEncounter active={scrollY >= 600} />
+
+      {/* Cinematic Dog Encounter — triggered 2s after sequence start */}
+      <CinematicDogs active={scrollY >= 600} />
 
       {/* Ripple Expansion Overlay */}
       {showExpansion && (

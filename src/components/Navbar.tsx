@@ -12,7 +12,7 @@ export default function Navbar({ show = true }: { show?: boolean }) {
                     // Initial centering transform that keyframes will build upon
                     transform: 'translateX(-50%)',
                     // Total animation duration for the pill to form
-                    animation: show ? 'navbarPillExpand 600ms cubic-bezier(0.23, 1, 0.32, 1) forwards' : 'none',
+                    animation: show ? 'navbarPillExpand 750ms cubic-bezier(0.23, 1, 0.32, 1) forwards' : 'none',
                     height: show ? '66px' : '0',
                 }}
             >
