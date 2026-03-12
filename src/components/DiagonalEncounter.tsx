@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useEffect, useState, useRef } from "react";
 
 /*
@@ -23,6 +24,9 @@ interface DiagonalLine {
     // Wave properties
     waveAmplitude: number;
     waveFrequency: number;
+    // Optional pixel nudge applied after path positioning (used for fine alignment).
+    offsetXpx?: number;
+    offsetYpx?: number;
 }
 
 const LINES: DiagonalLine[] = [
@@ -33,7 +37,7 @@ const LINES: DiagonalLine[] = [
     // Line 3: Lower-left — from upper-left crossing down to lower-center
     { startX: 0, startY: 42, endX: 45, endY: 78, meetAt: 0.25, icon0: "/cat0.svg", icon1: "/cat1.svg", waveAmplitude: 14, waveFrequency: 3.5 },
     // Line 4: Bottom-center — nearly vertical from top-center to bottom-center
-    { startX: 48, startY: 0, endX: 48, endY: 100, meetAt: 0.88, icon0: "/coffee0.svg", icon1: "/coffee1.svg", waveAmplitude: 10, waveFrequency: 3 },
+    { startX: 48, startY: 0, endX: 48, endY: 100, meetAt: 0.88, icon0: "/coffee0.svg", icon1: "/coffee1.svg", waveAmplitude: 10, waveFrequency: 3, offsetXpx: -52, offsetYpx: 52 },
     // Line 5: Right side — from upper-right to lower-right
     { startX: 65, startY: 20, endX: 100, endY: 72, meetAt: 0.7, icon0: "/rabbit0.svg", icon1: "/rabbit1.svg", waveAmplitude: 11, waveFrequency: 4.5 },
 ];
@@ -44,7 +48,15 @@ const GAP = 60; // Distance between icons at meeting point
 // Animation duration in ms (was 2000, now slower)
 const TRAVEL_DURATION = 4000;
 
-export default function DiagonalEncounter({ active }: { active: boolean }) {
+export default function DiagonalEncounter({
+    active,
+    blurStyle,
+    scale,
+}: {
+    active: boolean;
+    blurStyle?: CSSProperties;
+    scale?: number;
+}) {
     const [progress, setProgress] = useState(0); // 0 to 1
     const [bobbing, setBobbing] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -142,7 +154,7 @@ export default function DiagonalEncounter({ active }: { active: boolean }) {
     if (!mounted) return null;
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-[175]">
+        <div className="fixed inset-0 pointer-events-none z-[175]" style={blurStyle}>
             {/* Bobbing keyframes */}
             <style dangerouslySetInnerHTML={{
                 __html: `
@@ -155,6 +167,9 @@ export default function DiagonalEncounter({ active }: { active: boolean }) {
             {LINES.map((line, lineIdx) => {
                 const pos0 = getIconPosition(line, true, progress);
                 const pos1 = getIconPosition(line, false, progress);
+                const offsetXpx = line.offsetXpx ?? 0;
+                const offsetYpx = line.offsetYpx ?? 0;
+                const localScale = scale ?? 1;
 
                 return (
                     <div key={lineIdx}>
@@ -162,14 +177,14 @@ export default function DiagonalEncounter({ active }: { active: boolean }) {
                         <div
                             style={{
                                 position: "absolute",
-                                left: `${pos0.x}%`,
-                                top: `${pos0.y}%`,
+                                left: offsetXpx ? `calc(${pos0.x}% + ${offsetXpx}px)` : `${pos0.x}%`,
+                                top: offsetYpx ? `calc(${pos0.y}% + ${offsetYpx}px)` : `${pos0.y}%`,
                                 width: `${ICON_SIZE}px`,
                                 height: `${ICON_SIZE}px`,
-                                transform: "translate(-50%, -50%)",
+                                transform: `translate(-50%, -50%) scale(${localScale})`,
                                 opacity: active ? (progress > 0.05 ? 1 : progress / 0.05) : 0,
                                 transition: active ? "none" : "opacity 300ms ease-out",
-                                willChange: "left, top, opacity",
+                                willChange: "left, top, opacity, transform",
                             }}
                         >
                             {/* Inner container handles the bobbing animation */}
@@ -192,14 +207,14 @@ export default function DiagonalEncounter({ active }: { active: boolean }) {
                         <div
                             style={{
                                 position: "absolute",
-                                left: `${pos1.x}%`,
-                                top: `${pos1.y}%`,
+                                left: offsetXpx ? `calc(${pos1.x}% + ${offsetXpx}px)` : `${pos1.x}%`,
+                                top: offsetYpx ? `calc(${pos1.y}% + ${offsetYpx}px)` : `${pos1.y}%`,
                                 width: `${ICON_SIZE}px`,
                                 height: `${ICON_SIZE}px`,
-                                transform: "translate(-50%, -50%)",
+                                transform: `translate(-50%, -50%) scale(${localScale})`,
                                 opacity: active ? (progress > 0.05 ? 1 : progress / 0.05) : 0,
                                 transition: active ? "none" : "opacity 300ms ease-out",
-                                willChange: "left, top, opacity",
+                                willChange: "left, top, opacity, transform",
                             }}
                         >
                             {/* Inner container handles the bobbing animation */}

@@ -1,9 +1,36 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Navbar from "@/components/Navbar";
 import DiagonalEncounter from "@/components/DiagonalEncounter";
 import CinematicDogs from "@/components/CinematicDogs";
+
+const SCROLL_SCALE = 5 / 3;
+const HERO_BLUR_START = 200 * SCROLL_SCALE;
+const HERO_BLUR_SPEED = 20 * SCROLL_SCALE;
+const HERO_MID_START = 300 * SCROLL_SCALE;
+const HERO_MID_DURATION = 416 * SCROLL_SCALE;
+const HERO_FINAL_START = 550 * SCROLL_SCALE;
+const HERO_FINAL_DURATION = 125 * SCROLL_SCALE;
+const DIAGONAL_TRIGGER = 600 * SCROLL_SCALE;
+const PHASE_1_SCROLL_LENGTH = 1600;
+const PHASE_2_SCROLL_LENGTH = 1200;
+const PHASE_2_SQUISH_START = 400;
+const PHASE_2_START = PHASE_1_SCROLL_LENGTH;
+const TOTAL_SCROLL_HEIGHT = PHASE_2_START + PHASE_2_SCROLL_LENGTH;
+const HERO_FINAL_RANGE = DIAGONAL_TRIGGER - HERO_FINAL_START;
+const HERO_VERTICAL_MULTIPLIER = 500 / HERO_FINAL_RANGE;
+const HERO_HORIZONTAL_MULTIPLIER = 1000 / HERO_FINAL_RANGE;
+
+const getHeroOpacity = (scrollY: number) => {
+  if (scrollY > HERO_FINAL_START) {
+    return Math.max(0.4 - (scrollY - HERO_FINAL_START) / HERO_FINAL_DURATION, 0);
+  }
+  if (scrollY > HERO_MID_START) {
+    return Math.max(1 - (scrollY - HERO_MID_START) / HERO_MID_DURATION, 0.4);
+  }
+  return 1;
+};
 
 // The animated text component
 function AnimatedText({ blast }: { blast: boolean }) {
@@ -31,7 +58,7 @@ function AnimatedText({ blast }: { blast: boolean }) {
   if (!show) return null;
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+    <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
 
       {/* The Text */}
       <h1
@@ -263,19 +290,26 @@ export default function Home() {
   const [activeWordIndex, setActiveWordIndex] = useState(0);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [startBobbing, setStartBobbing] = useState(false);
+  const [showFinalPetGrid, setShowFinalPetGrid] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+
+  const scrollContainerRef = useRef<HTMLElement>(null);
 
   // Scroll Tracking
   useEffect(() => {
-    if (!showSwipeHint) return;
+    if (!showHero) return;
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      setScrollY(container.scrollTop);
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [showSwipeHint]);
+    handleScroll();
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [showHero]);
 
   // Lifted Cursor State
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
@@ -374,6 +408,44 @@ export default function Home() {
     }, 2000);
   };
 
+  const heroBlurValue = scrollY > HERO_BLUR_START ? Math.min((scrollY - HERO_BLUR_START) / HERO_BLUR_SPEED, 10) : 0;
+  const heroFinalDelta = Math.max(scrollY - HERO_FINAL_START, 0);
+  const heroOpacityValue = showHero ? getHeroOpacity(scrollY) : 0;
+
+  const earlySwipeHintOpacity = (showSwipeHint && scrollY < 1200)
+    ? Math.max(1 - scrollY / 100, 0)
+    : 0;
+  const showEarlySwipeHint = earlySwipeHintOpacity > 0;
+  const secondSwipeHintOpacity = (() => {
+    const start = 1200;
+    const end = PHASE_1_SCROLL_LENGTH;
+    const fade = 120;
+    if (scrollY < start || scrollY > end) return 0;
+    const fadeIn = Math.min((scrollY - start) / fade, 1);
+    const fadeOut = Math.min((end - scrollY) / fade, 1);
+    return Math.min(fadeIn, fadeOut);
+  })();
+  const showSecondSwipeHint = secondSwipeHintOpacity > 0;
+
+  const phase2ScrollY = Math.min(Math.max(scrollY - PHASE_2_START, 0), PHASE_2_SCROLL_LENGTH);
+  const phase2T = PHASE_2_SCROLL_LENGTH > 0 ? phase2ScrollY / PHASE_2_SCROLL_LENGTH : 0;
+  const phase2SquishT = phase2ScrollY <= PHASE_2_SQUISH_START
+    ? 0
+    : Math.min((phase2ScrollY - PHASE_2_SQUISH_START) / (PHASE_2_SCROLL_LENGTH - PHASE_2_SQUISH_START), 1);
+  const phase2Scale = 1 - phase2SquishT;
+  const phase2BlurPx = Math.min(phase2T * 22, 22);
+  const phase2ExitOpacity = Math.min(Math.max(1 - (phase2ScrollY - 600) / 200, 0), 1);
+  const phase2BlurStyle = phase2ScrollY > 0
+    ? {
+      filter: `blur(${phase2BlurPx}px)`,
+      willChange: "filter, opacity" as const,
+      opacity: phase2ExitOpacity,
+    }
+    : undefined;
+
+  const gridProgress = Math.min(Math.max((phase2ScrollY - 800) / 400, 0), 1);
+  const finalPetGridOpacity = Math.pow(gridProgress, 6);
+
   const handleGlobalClick = (e: React.MouseEvent) => {
     if (isClicked) return;
     setIsClicked(true);
@@ -383,14 +455,26 @@ export default function Home() {
 
   return (
     <main
+      ref={scrollContainerRef}
       onClick={handleGlobalClick}
-      className="relative min-h-screen w-full overflow-hidden flex items-center justify-center cursor-none z-0"
+      className={`relative h-screen w-full overflow-y-auto overflow-x-hidden cursor-none z-0 ${showHero ? 'home-scroll-snap' : ''}`}
       style={{
         backgroundColor: isClicked ? '#022009' : 'black',
         transition: isClicked ? 'background-color 2400ms ease-in-out 320ms' : 'none',
-        minHeight: showHero ? 'calc(100vh + 800px)' : '100vh'
       }}
     >
+      {/* Scroll-snap sentinels: forces one phase at a time even on fast momentum scroll. */}
+      {showHero && (
+        <div aria-hidden className="absolute inset-x-0 top-0 pointer-events-none opacity-0">
+          <div className="snap-stop h-px" />
+          <div style={{ height: PHASE_1_SCROLL_LENGTH }} />
+          <div className="snap-stop h-px" />
+          <div style={{ height: PHASE_2_SCROLL_LENGTH }} />
+          <div className="snap-stop h-px" />
+          <div className="h-screen" /> {/* Spacer to allow the last snap point to reach the top */}
+        </div>
+      )}
+
       {/* Persistent Global Animation Definitions */}
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -422,26 +506,31 @@ export default function Home() {
         .animate-swipeBob {
           animation: swipeBob 3000ms ease-in-out infinite;
         }
+
+        .home-scroll-snap {
+          scroll-snap-type: y mandatory;
+        }
+        .snap-stop {
+          scroll-snap-align: start;
+          scroll-snap-stop: always;
+        }
       `}} />
 
       <Navbar show={showNavbar} />
       <PawCursor trailingPos={trailingPos} showTan={showTan} />
-
-      {/* Secondary Hero Text - Fades in then glides out */}
-      {/* Secondary Hero Text - Fades in then glides out */}
       <div
         className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none z-[170]"
         style={{
-          opacity: showHero ? (scrollY > 550 ? Math.max(0.4 - (scrollY - 550) / 125, 0) : (scrollY > 300 ? Math.max(1 - (scrollY - 300) / 416, 0.4) : 1)) : 0,
+          opacity: heroOpacityValue,
           animation: showSecondaryExit
             ? 'secondaryGlideShift 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards'
             : (showSecondaryText ? 'secondaryFade 600ms ease-out forwards' : 'none'),
           willChange: 'opacity, filter, transform',
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
-          filter: `blur(${scrollY > 200 ? Math.min((scrollY - 200) / 20, 10) : 0}px)`,
+          filter: `blur(${heroBlurValue}px)`,
           transition: scrollY === 0 ? 'opacity 800ms ease-out, filter 800ms ease-out' : 'none',
-          transform: `translateY(${scrollY > 550 ? -((scrollY - 550) * 10) : 0}px)`
+          transform: `translateY(${-heroFinalDelta * HERO_VERTICAL_MULTIPLIER}px)`
         }}
       >
         <div className="flex flex-col items-center gap-2">
@@ -458,10 +547,10 @@ export default function Home() {
       <div
         className={`fixed inset-0 flex items-center justify-center pointer-events-none z-[170] px-6 ${showHero ? 'opacity-100' : 'opacity-0'}`}
         style={{
-          transform: 'translateY(80px)',
-          filter: `blur(${scrollY > 200 ? Math.min((scrollY - 200) / 20, 10) : 0}px)`,
-          opacity: showHero ? (scrollY > 550 ? Math.max(0.4 - (scrollY - 550) / 125, 0) : (scrollY > 300 ? Math.max(1 - (scrollY - 300) / 416, 0.4) : 1)) : 0,
-          willChange: 'opacity, filter',
+          transform: `translateY(${80 - heroFinalDelta * HERO_VERTICAL_MULTIPLIER}px)`,
+          filter: `blur(${heroBlurValue}px)`,
+          opacity: heroOpacityValue,
+          willChange: 'opacity, filter, transform',
           transition: scrollY === 0 ? 'opacity 1200ms ease-out 200ms, filter 1200ms ease-out' : 'none'
         }}
       >
@@ -470,8 +559,8 @@ export default function Home() {
           <p
             className="text-2xl md:text-3xl font-bold text-white leading-relaxed drop-shadow-lg"
             style={{
-              transform: `translateX(${scrollY > 550 ? -((scrollY - 550) * 20) : 0}px)`,
-              opacity: scrollY > 550 ? Math.max(0.4 - (scrollY - 550) / 125, 0) : 1
+              transform: `translateX(${-heroFinalDelta * HERO_HORIZONTAL_MULTIPLIER}px)`,
+              opacity: heroOpacityValue
             }}
           >
             PawMatch is a friendly meetup club where pets and{" "}
@@ -502,8 +591,8 @@ export default function Home() {
           <p
             className="text-2xl md:text-3xl font-bold text-white leading-relaxed drop-shadow-lg"
             style={{
-              transform: `translateX(${scrollY > 550 ? ((scrollY - 550) * 20) : 0}px)`,
-              opacity: scrollY > 550 ? Math.max(0.4 - (scrollY - 550) / 125, 0) : 1
+              transform: `translateX(${heroFinalDelta * HERO_HORIZONTAL_MULTIPLIER}px)`,
+              opacity: heroOpacityValue
             }}
           >
             Bring your companion and connect with fellow{" "}
@@ -516,11 +605,31 @@ export default function Home() {
       {/* Swipe Up Hint - Isolated bobbing from centering to avoid transform conflicts */}
       <div className="fixed bottom-[72px] left-1/2 -translate-x-1/2 pointer-events-none z-[170]">
         <div
-          className={`transition-all duration-[800ms] ease-out ${showSwipeHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'
+          className={`transition-all duration-[800ms] ease-out ${showEarlySwipeHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'
             }`}
-          style={{ opacity: showSwipeHint ? Math.max(1 - scrollY / 100, 0) : 0 }}
+          style={{ opacity: earlySwipeHintOpacity }}
         >
           <div className={startBobbing ? 'animate-swipeBob' : ''}>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-white/60 text-sm font-bold tracking-widest uppercase mb-1 drop-shadow-md">
+                Swipe up for more
+              </span>
+              <span className="material-symbols-outlined text-white/40 text-2xl">
+                keyboard_double_arrow_up
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Swipe Up Hint (Phase 1 Late) - fades in at 1200px and fades out at 1600px */}
+      <div className="fixed bottom-[72px] left-1/2 -translate-x-1/2 pointer-events-none z-[170]">
+        <div
+          className={`transition-all duration-[800ms] ease-out ${showSecondSwipeHint ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'
+            }`}
+          style={{ opacity: secondSwipeHintOpacity }}
+        >
+          <div className={showSecondSwipeHint ? 'animate-swipeBob' : ''}>
             <div className="flex flex-col items-center gap-1">
               <span className="text-white/60 text-sm font-bold tracking-widest uppercase mb-1 drop-shadow-md">
                 Swipe up for more
@@ -541,15 +650,31 @@ export default function Home() {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           filter: `blur(${scrollY > 50 ? Math.min((scrollY - 50) / 40, 10) : 0}px)`,
-          opacity: showPetGrid ? (scrollY >= 600 ? 0 : Math.max(1 - scrollY / 600, 0)) : 0
+          opacity: showPetGrid ? (scrollY >= DIAGONAL_TRIGGER ? 0 : Math.max(1 - scrollY / DIAGONAL_TRIGGER, 0)) : 0
+        }}
+      />
+
+      {/* PetGrid (Phase 2 End) - scroll-driven fade-in stretched across last 400px of Phase 2 */}
+      <div
+        className="fixed inset-0 pointer-events-none z-[160]"
+        style={{
+          backgroundImage: `url('/PetGrid.jpg')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          opacity: finalPetGridOpacity,
+          willChange: "opacity",
         }}
       />
 
       {/* Diagonal Pet Encounter — triggered after rocket split */}
-      <DiagonalEncounter active={scrollY >= 600} />
+      <DiagonalEncounter active={scrollY >= DIAGONAL_TRIGGER} blurStyle={phase2BlurStyle} scale={phase2Scale} />
 
       {/* Cinematic Dog Encounter — triggered 2s after sequence start */}
-      <CinematicDogs active={scrollY >= 600} />
+      <CinematicDogs
+        active={scrollY >= DIAGONAL_TRIGGER}
+        blurStyle={phase2BlurStyle}
+        scale={phase2Scale}
+      />
 
       {/* Ripple Expansion Overlay */}
       {showExpansion && (
