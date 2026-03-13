@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Bayon, Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+});
+const bayon = Bayon({
+  variable: "--font-bayon",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -22,7 +27,7 @@ export default function RootLayout({
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
       </head>
-      <body className={`${inter.variable} antialiased font-display text-slate-900 overflow-x-hidden min-h-screen flex flex-col relative`}>
+      <body className={`${inter.variable} ${bayon.variable} antialiased font-display text-slate-900 overflow-x-hidden min-h-screen flex flex-col relative`}>
         <div className="flex-grow z-10">
           {children}
         </div>

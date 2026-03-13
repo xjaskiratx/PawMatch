@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Navbar from "@/components/Navbar";
 import DiagonalEncounter from "@/components/DiagonalEncounter";
 import CinematicDogs from "@/components/CinematicDogs";
+import PostSecondScrollBentoGrid from "@/components/PostSecondScrollBentoGrid";
 
 const SCROLL_SCALE = 5 / 3;
 const HERO_BLUR_START = 200 * SCROLL_SCALE;
@@ -302,40 +303,61 @@ export default function Home() {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    const handleScroll = () => {
-      setScrollY(container.scrollTop);
+    let frame = 0;
+    let lastScrollTop = -1;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const next = container.scrollTop;
+        if (next !== lastScrollTop) {
+          lastScrollTop = next;
+          setScrollY(next);
+        }
+      });
     };
 
-    handleScroll();
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
+    onScroll();
+    container.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      container.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, [showHero]);
 
   // Lifted Cursor State
-  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
   const [trailingPos, setTrailingPos] = useState({ x: -100, y: -100 });
 
   useEffect(() => {
+    const mousePosRef = { x: -100, y: -100 };
+    let isMounted = true;
     let frame: number;
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+      mousePosRef.x = e.clientX;
+      mousePosRef.y = e.clientY;
     };
     window.addEventListener("mousemove", handleMouseMove);
 
     const animateTrailing = () => {
-      setTrailingPos(prev => ({
-        x: prev.x + (mousePos.x - prev.x) * 0.15,
-        y: prev.y + (mousePos.y - prev.y) * 0.15,
-      }));
-      frame = requestAnimationFrame(animateTrailing);
+      setTrailingPos((prev) => {
+        const next = {
+          x: prev.x + (mousePosRef.x - prev.x) * 0.15,
+          y: prev.y + (mousePosRef.y - prev.y) * 0.15,
+        };
+        return next;
+      });
+      if (isMounted) {
+        frame = requestAnimationFrame(animateTrailing);
+      }
     };
     frame = requestAnimationFrame(animateTrailing);
 
     return () => {
+      isMounted = false;
       window.removeEventListener("mousemove", handleMouseMove);
       cancelAnimationFrame(frame);
     };
-  }, [mousePos]);
+  }, []);
 
   useEffect(() => {
     if (isClicked) {
@@ -654,17 +676,8 @@ export default function Home() {
         }}
       />
 
-      {/* PetGrid (Phase 2 End) - scroll-driven fade-in stretched across last 400px of Phase 2 */}
-      <div
-        className="fixed inset-0 pointer-events-none z-[160]"
-        style={{
-          backgroundImage: `url('/PetGrid.jpg')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          opacity: finalPetGridOpacity,
-          willChange: "opacity",
-        }}
-      />
+      {/* Post-Second Scroll Bento Grid */}
+      <PostSecondScrollBentoGrid opacity={finalPetGridOpacity} visible={finalPetGridOpacity >= 1} />
 
       {/* Diagonal Pet Encounter — triggered after rocket split */}
       <DiagonalEncounter active={scrollY >= DIAGONAL_TRIGGER} blurStyle={phase2BlurStyle} scale={phase2Scale} />
