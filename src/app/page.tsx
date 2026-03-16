@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import DiagonalEncounter from "@/components/DiagonalEncounter";
 import CinematicDogs from "@/components/CinematicDogs";
 import PostSecondScrollBentoGrid from "@/components/PostSecondScrollBentoGrid";
+import LiquidFooter from "@/components/LiquidFooter";
 
 const SCROLL_SCALE = 5 / 3;
 const HERO_BLUR_START = 200 * SCROLL_SCALE;
@@ -22,6 +23,7 @@ const TOTAL_SCROLL_HEIGHT = PHASE_2_START + PHASE_2_SCROLL_LENGTH;
 const HERO_FINAL_RANGE = DIAGONAL_TRIGGER - HERO_FINAL_START;
 const HERO_VERTICAL_MULTIPLIER = 500 / HERO_FINAL_RANGE;
 const HERO_HORIZONTAL_MULTIPLIER = 1000 / HERO_FINAL_RANGE;
+const GRID_SCROLL_TARGET = PHASE_2_START + 800;
 
 const getHeroOpacity = (scrollY: number) => {
   if (scrollY > HERO_FINAL_START) {
@@ -197,7 +199,7 @@ function AnimatedText({ blast }: { blast: boolean }) {
 function PawCursor({ trailingPos, showTan }: { trailingPos: { x: number, y: number }, showTan: boolean }) {
   return (
     <div
-      className="fixed top-0 left-0 pointer-events-none z-[200] transition-colors duration-500"
+      className="fixed top-0 left-0 pointer-events-none z-[2000] transition-colors duration-500"
       style={{
         transform: `translate(${trailingPos.x}px, ${trailingPos.y}px)`,
         color: showTan ? '#C29B6D' : '#410202',
@@ -293,8 +295,42 @@ export default function Home() {
   const [startBobbing, setStartBobbing] = useState(false);
   const [showFinalPetGrid, setShowFinalPetGrid] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [navFadePhase, setNavFadePhase] = useState<"idle" | "out" | "in">("idle");
 
   const scrollContainerRef = useRef<HTMLElement>(null);
+
+  const scrollToPosition = (top: number, duration = 400) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const start = container.scrollTop;
+    const delta = top - start;
+    const startTime = performance.now();
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      // Smooth ease-out
+      const eased = 1 - Math.pow(1 - t, 3);
+      container.scrollTop = start + delta * eased;
+      if (t < 1) {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+  };
+
+  const handleNavHome = () => {
+    const container = scrollContainerRef.current;
+    if (!container || navFadePhase !== "idle" || container.scrollTop === 0) return;
+    setNavFadePhase("out");
+    window.setTimeout(() => {
+      container.scrollTop = 0;
+      setNavFadePhase("in");
+      window.setTimeout(() => setNavFadePhase("idle"), 250);
+    }, 400);
+  };
+
+  const handleNavExplore = () => scrollToPosition(GRID_SCROLL_TARGET, 400);
 
   // Scroll Tracking
   useEffect(() => {
@@ -341,8 +377,8 @@ export default function Home() {
     const animateTrailing = () => {
       setTrailingPos((prev) => {
         const next = {
-          x: prev.x + (mousePosRef.x - prev.x) * 0.15,
-          y: prev.y + (mousePosRef.y - prev.y) * 0.15,
+          x: prev.x + (mousePosRef.x - prev.x) * 0.45,
+          y: prev.y + (mousePosRef.y - prev.y) * 0.45,
         };
         return next;
       });
@@ -481,10 +517,20 @@ export default function Home() {
       onClick={handleGlobalClick}
       className={`relative h-screen w-full overflow-y-auto overflow-x-hidden cursor-none z-0 ${showHero ? 'home-scroll-snap' : ''}`}
       style={{
-        backgroundColor: isClicked ? '#022009' : 'black',
+        backgroundColor: navFadePhase === "idle" ? (isClicked ? '#022009' : 'black') : '#022009',
         transition: isClicked ? 'background-color 2400ms ease-in-out 320ms' : 'none',
+        willChange: navFadePhase === "idle" ? undefined : "opacity",
       }}
     >
+      <div
+        className="fixed inset-0 pointer-events-none z-[1000]"
+        style={{
+          backgroundColor: "#022009",
+          opacity: navFadePhase === "idle" ? 0 : 1,
+          transition: "opacity 400ms ease",
+          willChange: navFadePhase === "idle" ? undefined : "opacity",
+        }}
+      />
       {/* Scroll-snap sentinels: forces one phase at a time even on fast momentum scroll. */}
       {showHero && (
         <div aria-hidden className="absolute inset-x-0 top-0 pointer-events-none opacity-0">
@@ -538,8 +584,9 @@ export default function Home() {
         }
       `}} />
 
-      <Navbar show={showNavbar} />
+      <Navbar show={showNavbar} onHome={handleNavHome} onExplore={handleNavExplore} />
       <PawCursor trailingPos={trailingPos} showTan={showTan} />
+      <LiquidFooter scrollY={scrollY} visible={showHero} />
       <div
         className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none z-[170]"
         style={{

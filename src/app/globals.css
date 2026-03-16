@@ -14,6 +14,22 @@
   --font-display: var(--font-inter);
 }
 
+@layer base {
+  :root {
+    --cursor-paw: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='8' cy='10' r='4' fill='%23C29B6D'/%3E%3Ccircle cx='16' cy='6' r='4' fill='%23C29B6D'/%3E%3Ccircle cx='24' cy='10' r='4' fill='%23C29B6D'/%3E%3Cpath d='M8 22c0-4 3.6-7 8-7s8 3 8 7-3.6 8-8 8-8-4-8-8z' fill='%23C29B6D'/%3E%3C/svg%3E") 16 16, pointer;
+  }
+
+  a,
+  button,
+  summary,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  .cursor-pointer {
+    cursor: var(--cursor-paw);
+  }
+}
+
 @layer utilities {
   .diagonal-gradient {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-peach) 100%);
@@ -27,5 +43,10 @@
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  .cursor-none,
+  .cursor-none * {
+    cursor: none !important;
   }
 }

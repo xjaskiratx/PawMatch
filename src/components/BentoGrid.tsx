@@ -176,7 +176,7 @@ export default function BentoGrid({ visible }: { visible: boolean }) {
                     height: 872,
                     display: "grid",
                     gap: "28px",
-                    transform: `scale(${scale})`,
+                    transform: `translateY(20px) scale(${scale})`,
                     transformOrigin: "center center",
                     gridTemplateAreas: `
                         "founder   founder   events    events    newsletter"
@@ -219,15 +219,24 @@ export default function BentoGrid({ visible }: { visible: boolean }) {
                             )}
 
                             {/* Content */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 gap-3 z-20">
+                            <div className="absolute inset-0 flex items-center justify-center p-6 z-20">
                                 <img
                                     src={cell.icon}
                                     alt=""
-                                    className="w-12 h-12 object-contain drop-shadow-md"
+                                    className={`${
+                                        cell.id === "events" ? "w-44 h-44" :
+                                        cell.id === "howworks" ? "w-36 h-36" :
+                                        cell.id === "waiver" ? "w-56 h-56" :
+                                        cell.id === "photobooth" ? "w-64 h-64" :
+                                        cell.id === "contact" ? "w-32 h-32" :
+                                        "w-48 h-48"
+                                    } object-contain drop-shadow-2xl transition-transform duration-300 group-hover:scale-110`}
                                 />
-                                <span className="text-white font-semibold text-center leading-tight tracking-tight px-2" style={{ fontSize: "clamp(12px, 1vw, 16px)" }}>
-                                    {cell.label}
-                                </span>
+                                <div className="absolute inset-0 flex items-center justify-center p-4 z-10 pointer-events-none">
+                                    <span className="text-white font-bold text-center leading-tight tracking-tight px-2" style={{ fontSize: "clamp(18px, 1.8vw, 24px)", textShadow: "0px 4px 12px rgba(0,0,0,1)" }}>
+                                        {cell.label}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     );

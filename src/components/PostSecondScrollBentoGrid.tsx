@@ -133,20 +133,14 @@ export default function PostSecondScrollBentoGrid({
           transition: opacity 800ms ease;
         }
         .bento-label {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          width: 100%;
           font-family: var(--font-display), system-ui, sans-serif;
-          font-weight: 700;
-          font-size: 22px;
+          font-weight: 800;
+          font-size: 36px;
           letter-spacing: 0.02em;
-          color: rgba(255, 255, 255, 0.72);
+          color: white;
           text-align: center;
           padding: 0 24px;
-          position: relative;
-          z-index: 1;
+          text-shadow: 0px 4px 16px rgba(0, 0, 0, 1);
         }
         .newsletter-inline {
           position: relative;
@@ -227,7 +221,7 @@ export default function PostSecondScrollBentoGrid({
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: "url('/PetGrid.jpg')",
+          backgroundImage: "url('/PetGrid4.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -243,7 +237,7 @@ export default function PostSecondScrollBentoGrid({
             top: "50%",
             width: "1920px",
             height: "1080px",
-            transform: `translate(-50%, -50%) scale(${scale})`,
+            transform: `translate(-50%, -50%) translateY(8px) scale(${scale})`,
             transformOrigin: "center",
           }}
           onClick={() => setActiveId(null)}
@@ -292,15 +286,25 @@ export default function PostSecondScrollBentoGrid({
                   setActiveId((prev) => (prev === cell.id ? null : cell.id));
                 }}
               >
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 gap-5">
+                <div className="absolute inset-0 flex items-center justify-center p-6">
                   {(cell as any).icon && (
-                    <img 
-                      src={(cell as any).icon} 
-                      alt="" 
-                      className={`w-28 h-28 object-contain drop-shadow-2xl transition-all duration-500 group-hover:scale-110 ${cell.label === "PawBooth" ? "rounded-3xl" : ""}`} 
+                    <img
+                      src={(cell as any).icon}
+                      alt=""
+                      className={`${
+                        cell.id === "mid-left" ? "w-56 h-56" :
+                        cell.id === "mid-center" ? "w-56 h-56" :
+                        cell.id === "top-right" ? "w-80 h-80" :
+                        cell.id === "bottom-left" ? "w-80 h-80" :
+                        cell.id === "mid-right" ? "w-52 h-52" :
+                        cell.id === "bottom-right" ? "w-44 h-44" :
+                        "w-72 h-72"
+                      } object-contain drop-shadow-2xl transition-all duration-500 group-hover:scale-110 ${cell.label === "PawBooth" ? "rounded-3xl" : ""}`}
                     />
                   )}
-                  <span className="bento-label">{cell.label}</span>
+                  <div className="absolute inset-0 flex items-center justify-center p-6 z-10 pointer-events-none">
+                    <span className="bento-label">{cell.label}</span>
+                  </div>
                 </div>
               </div>
             );

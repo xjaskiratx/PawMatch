@@ -2,11 +2,19 @@
 
 import Link from "next/link";
 
-export default function Navbar({ show = true }: { show?: boolean }) {
+export default function Navbar({
+    show = true,
+    onHome,
+    onExplore,
+}: {
+    show?: boolean;
+    onHome?: () => void;
+    onExplore?: () => void;
+}) {
     return (
         <>
             <nav
-                className={`fixed top-8 left-1/2 z-[180] rounded-full overflow-hidden border border-white/20 shadow-2xl backdrop-blur-xl bg-white/10 flex items-center justify-center
+                className={`fixed top-8 left-1/2 z-[1100] rounded-full overflow-hidden border border-white/20 shadow-2xl backdrop-blur-xl bg-white/10 flex items-center justify-center
                     ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 style={{
                     // Initial centering transform that keyframes will build upon
@@ -24,19 +32,33 @@ export default function Navbar({ show = true }: { show?: boolean }) {
 
                     <div className="flex items-center gap-10">
                         <div className="hidden md:flex items-center gap-8">
-                            <Link className="text-sm font-bold text-white/90 hover:text-white transition-colors" href="/">
-                                Home
-                            </Link>
-                            <Link className="text-sm font-bold text-white/90 hover:text-white transition-colors" href="/events">
-                                Events
-                            </Link>
+                            {onHome ? (
+                                <button
+                                    type="button"
+                                    onClick={onHome}
+                                    className="text-sm font-bold text-white/90 hover:text-white transition-colors"
+                                >
+                                    Home
+                                </button>
+                            ) : (
+                                <Link className="text-sm font-bold text-white/90 hover:text-white transition-colors" href="/">
+                                    Home
+                                </Link>
+                            )}
+                            {onExplore ? (
+                                <button
+                                    type="button"
+                                    onClick={onExplore}
+                                    className="text-sm font-bold text-white/90 hover:text-white transition-colors"
+                                >
+                                    Explore
+                                </button>
+                            ) : (
+                                <Link className="text-sm font-bold text-white/90 hover:text-white transition-colors" href="/">
+                                    Explore
+                                </Link>
+                            )}
                         </div>
-                        <Link
-                            href="/events"
-                            className="bg-white hover:bg-sage text-slate-900 px-6 py-2 rounded-full font-black text-sm transition-all shadow-lg active:scale-95 whitespace-nowrap"
-                        >
-                            Get Started
-                        </Link>
                     </div>
                 </div>
             </nav>
