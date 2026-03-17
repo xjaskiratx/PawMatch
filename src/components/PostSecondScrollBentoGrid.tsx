@@ -1,18 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
-const CELLS = [
-  { id: "top-left", label: "About the Founder", icon: "/AboutTheFounder.png", w: 413, h: 249, x: 960 - 413 / 2 - 553.5, y: 540 - 249 / 2 - 285.5 },
-  { id: "top-mid", label: "Newsletter", icon: "/MailPaw0.png", w: 413, h: 249, x: 960 - 413 / 2 - 112.5, y: 540 - 249 / 2 - 285.5 },
-  { id: "top-right", label: "Waiver & Liability", icon: "/WaiverAndLiability.png", w: 627, h: 249, x: 1082, y: 130 },
-  { id: "mid-left", label: "Events", icon: "/calendar.png", w: 413, h: 249, x: 960 - 413 / 2 - 553.5, y: 540 - 249 / 2 - 3.5 },
-  { id: "mid-center", label: "How This Works", icon: "/HowItWorks.png", w: 617, h: 249, x: 646, y: 412 },
-  { id: "mid-right", label: "Contact", icon: "/Contact.png", w: 413, h: 249, x: 960 - 413 / 2 + 542.5, y: 540 - 249 / 2 - 3.5 },
-  { id: "bottom-left", label: "PawBooth", icon: "/PawBooth.png", w: 627, h: 249, x: 200, y: 689 },
-  { id: "bottom-mid", label: "Member Stories", icon: "/MemberStories.png", w: 413, h: 249, x: 960 - 413 / 2 + 101.5, y: 540 - 249 / 2 + 273.5 },
-  { id: "bottom-right", label: "Become a Contributor", icon: "/Contributor.png", w: 413, h: 249, x: 960 - 413 / 2 + 542.5, y: 540 - 249 / 2 + 273.5 },
-];
+import { useEffect, useState } from "react";
 
 export default function PostSecondScrollBentoGrid({
   opacity = 1,
@@ -22,202 +10,66 @@ export default function PostSecondScrollBentoGrid({
   visible?: boolean;
 }) {
   const [scale, setScale] = useState(1);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [cellsVisible, setCellsVisible] = useState(false);
-  const navbarBottomOffset = 98;
-  const cellBaseStyle = {
-    background:
-      "linear-gradient(140deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 45%, rgba(255, 255, 255, 0.14) 100%)",
-    border: "1px solid rgba(255, 255, 255, 0.18)",
-    boxShadow:
-      "0px 18px 36px rgba(0, 0, 0, 0.35), inset 0px 1px 0px rgba(255, 255, 255, 0.35)",
-    backdropFilter: "blur(18px) saturate(130%)",
-    WebkitBackdropFilter: "blur(18px) saturate(130%)",
-  };
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [activeCol, setActiveCol] = useState<number | null>(null);
+  const [showCanvas, setShowCanvas] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState(false);
 
-  const [islandBounds, setIslandBounds] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-  const [islandVisible, setIslandVisible] = useState(false);
-  const newsletterCell = useMemo(() => CELLS.find((cell) => cell.label === "Newsletter") ?? null, []);
-  const waiverCell = useMemo(() => CELLS.find((cell) => cell.label === "Waiver & Liability") ?? null, []);
-  const howItWorksCell = useMemo(() => CELLS.find((cell) => cell.label === "How This Works") ?? null, []);
-  const memberStoriesCell = useMemo(() => CELLS.find((cell) => cell.label === "Member Stories") ?? null, []);
-  const photoBoothCell = useMemo(() => CELLS.find((cell) => cell.label === "PawBooth") ?? null, []);
-  const contributorCell = useMemo(() => CELLS.find((cell) => cell.label === "Become a Contributor") ?? null, []);
-  const contactCell = useMemo(() => CELLS.find((cell) => cell.label === "Contact") ?? null, []);
-  const founderCell = useMemo(() => CELLS.find((cell) => cell.label === "About the Founder") ?? null, []);
-  const eventsCell = useMemo(() => CELLS.find((cell) => cell.label === "Events") ?? null, []);
+  const navbarBottomOffset = 98;
+  const footerTopOffset = 120; // Estimated height/offset of footer pill area
+
+  const pillars = [
+    { title: "About \nthe Founder", icon: "person", subtitle: "Our Story • Vision" },
+    { title: "Events", icon: "event", subtitle: "Meetups • Join Us" },
+    { title: "Paw Booth", icon: "photo_library", subtitle: "Archive • Submit" },
+    { title: "Let's Grow \nTogether", icon: "diversity_1", subtitle: "Join • Contribute" },
+  ];
 
   useEffect(() => {
     if (!visible) {
-      setCellsVisible(false);
-      setActiveId(null);
-      return;
+      setActiveCol(null);
+      setShowCanvas(false);
+      setEmail("");
+      setEmailError(false);
     }
-
-    setActiveId(null);
-    const timer = window.setTimeout(() => setCellsVisible(true), 150);
-    return () => window.clearTimeout(timer);
   }, [visible]);
 
-  const getIsland = (activeIdValue: string | null) => {
-    if (!activeIdValue) return null;
-    const active = CELLS.find((cell) => cell.id === activeIdValue);
-    if (!active) return null;
-    const others = CELLS.filter((cell) => cell.id !== activeIdValue);
-    const minX = Math.min(...others.map((cell) => cell.x));
-    const minY = Math.min(...others.map((cell) => cell.y));
-    const maxX = Math.max(...others.map((cell) => cell.x + cell.w));
-    const maxY = Math.max(...others.map((cell) => cell.y + cell.h));
-    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
-  };
-
-  const island = useMemo(() => getIsland(activeId), [activeId]);
-
   useEffect(() => {
-    if (island) {
-      setIslandBounds(island);
-      setIslandVisible(true);
-      return;
+    if (activeCol !== null) {
+      const timer = setTimeout(() => setShowCanvas(true), 300);
+      return () => clearTimeout(timer);
+    } else {
+      setShowCanvas(false);
     }
-
-    if (islandBounds) {
-      setIslandVisible(false);
-      const timer = window.setTimeout(() => {
-        setIslandBounds(null);
-      }, 800);
-      return () => window.clearTimeout(timer);
-    }
-  }, [island, islandBounds]);
+  }, [activeCol]);
 
   useEffect(() => {
     const updateScale = () => {
       const nextScale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
       setScale(Number.isFinite(nextScale) && nextScale > 0 ? nextScale : 1);
     };
-
     updateScale();
     window.addEventListener("resize", updateScale);
     return () => window.removeEventListener("resize", updateScale);
   }, []);
 
+  const handleNewsletterSubmit = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError(true);
+    } else {
+      setEmailError(false);
+      // Logic for successful signup
+      alert("Welcome to the club!");
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 pointer-events-none z-[160]"
-      style={{ opacity, willChange: "opacity" }}
+      style={{ opacity, transition: "opacity 400ms ease-in-out", willChange: "opacity" }}
     >
-      <style>{`
-        .bento-cell {
-          pointer-events: auto;
-          position: relative;
-          overflow: hidden;
-        }
-        .bento-cell::after {
-          content: "";
-          position: absolute;
-          inset: -40% -60%;
-          background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.25) 45%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0.2) 55%, transparent 80%);
-          transform: translateX(-120%) rotate(8deg);
-          opacity: 0;
-          transition: opacity 150ms ease-out;
-          pointer-events: none;
-        }
-        .bento-cell:hover::after {
-          opacity: 1;
-          animation: bentoShimmer 900ms ease-out;
-        }
-        @keyframes bentoShimmer {
-          from { transform: translateX(-120%) rotate(8deg); }
-          to { transform: translateX(120%) rotate(8deg); }
-        }
-        .bento-island {
-          transition: opacity 800ms ease;
-        }
-        .bento-label {
-          font-family: var(--font-display), system-ui, sans-serif;
-          font-weight: 800;
-          font-size: 36px;
-          letter-spacing: 0.02em;
-          color: white;
-          text-align: center;
-          padding: 0 24px;
-          text-shadow: 0px 4px 16px rgba(0, 0, 0, 1);
-        }
-        .newsletter-inline {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          width: 100%;
-          height: 100%;
-          padding: 0 28px;
-          font-family: var(--font-bayon), var(--font-display), system-ui, sans-serif;
-          font-size: 20px;
-          letter-spacing: 0.03em;
-          color: rgba(255, 255, 255, 0.78);
-          text-transform: uppercase;
-        }
-        .newsletter-inline span {
-          max-width: 44%;
-        }
-        .newsletter-inline .right {
-          text-align: right;
-          font-size: 14px;
-          text-transform: none;
-          letter-spacing: 0.01em;
-          color: rgba(255, 255, 255, 0.68);
-        }
-        .newsletter-canvas {
-          position: absolute;
-          z-index: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          color: rgba(255, 255, 255, 0.78);
-        }
-        .newsletter-canvas p {
-          font-size: 17px;
-          line-height: 1.5;
-          letter-spacing: 0.01em;
-          margin: 0;
-          text-transform: none;
-          font-family: var(--font-display), system-ui, sans-serif;
-        }
-        .newsletter-canvas ul {
-          list-style: disc;
-          padding-left: 20px;
-          margin: 0;
-          font-family: var(--font-display), system-ui, sans-serif;
-          font-size: 17px;
-          line-height: 1.5;
-        }
-        .events-scene {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .events-scene img {
-          width: 180px;
-          height: auto;
-          opacity: 0.6;
-          filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.25));
-        }
-        .events-bob {
-          animation: eventsBob 3.4s ease-in-out infinite;
-        }
-        .events-bob-delay {
-          animation: eventsBob 3.4s ease-in-out infinite;
-          animation-delay: 0.6s;
-        }
-        @keyframes eventsBob {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-4px); }
-          100% { transform: translateY(0px); }
-        }
-      `}</style>
       <div
         className="absolute inset-0"
         style={{
@@ -226,503 +78,287 @@ export default function PostSecondScrollBentoGrid({
           backgroundPosition: "center",
         }}
       />
+
+      {/* Centered Wrapper between Navbar and Footer */}
       <div
-        className="absolute left-0 right-0 bottom-0"
-        style={{ top: `${navbarBottomOffset}px` }}
+        className="absolute left-0 right-0 overflow-hidden"
+        style={{
+          top: `${navbarBottomOffset}px`,
+          bottom: `${footerTopOffset}px`
+        }}
       >
         <div
           style={{
             position: "absolute",
             left: "50%",
             top: "50%",
-            width: "1920px",
-            height: "1080px",
-            transform: `translate(-50%, -50%) translateY(8px) scale(${scale})`,
+            width: "1600px",
+            height: "700px",
+            transform: `translate(-50%, -50%) scale(${scale})`,
             transformOrigin: "center",
+            borderLeft: "2px solid rgba(96, 165, 250, 0.7)",
+            borderRight: "2px solid rgba(251, 146, 60, 0.8)",
           }}
-          onClick={() => setActiveId(null)}
         >
-          <div
-            style={{
-              position: "absolute",
-              left: `${(islandBounds?.x ?? 0)}px`,
-              top: `${(islandBounds?.y ?? 0)}px`,
-              width: `${Math.max(islandBounds?.w ?? 0, 0)}px`,
-              height: `${Math.max(islandBounds?.h ?? 0, 0)}px`,
-              borderRadius: "42px",
-              ...cellBaseStyle,
-              opacity: islandVisible ? 1 : 0,
-              transition: "opacity 800ms ease",
-              zIndex: 0,
-            }}
-            className="bento-island"
-          />
+          {/* 4-Column Accordion */}
+          <div className="flex w-full h-full gap-6 pointer-events-auto">
+            {pillars.map((pillar, idx) => {
+              const isHovered = hoveredIndex === idx;
+              const isOtherHovered = hoveredIndex !== null && hoveredIndex !== idx;
+              const isDetailActive = activeCol !== null;
 
-          {CELLS.map((cell) => {
-            const isActive = cell.id === activeId;
-            const shouldCollapse = activeId !== null && !isActive;
-            return (
-              <div
-                key={cell.id}
-                style={{
-                  position: "absolute",
-                  width: `${cell.w}px`,
-                  height: `${cell.h}px`,
-                  left: `${cell.x}px`,
-                  top: `${cell.y}px`,
-                  ...cellBaseStyle,
-                  borderRadius: "34px",
-                  opacity: shouldCollapse ? 0 : (cellsVisible ? 1 : 0),
-                  transition: cellsVisible
-                    ? "opacity 800ms ease, transform 800ms ease"
-                    : "opacity 500ms ease, transform 500ms ease",
-                  transformOrigin: "center",
-                  transform: shouldCollapse ? "scale(0)" : (cellsVisible ? "scale(1)" : "scale(0.9)"),
-                  zIndex: 1,
-                }}
-                className="bento-cell group"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setActiveId((prev) => (prev === cell.id ? null : cell.id));
-                }}
-              >
-                <div className="absolute inset-0 flex items-center justify-center p-6">
-                  {(cell as any).icon && (
-                    <img
-                      src={(cell as any).icon}
-                      alt=""
-                      className={`${
-                        cell.id === "mid-left" ? "w-56 h-56" :
-                        cell.id === "mid-center" ? "w-56 h-56" :
-                        cell.id === "top-right" ? "w-80 h-80" :
-                        cell.id === "bottom-left" ? "w-80 h-80" :
-                        cell.id === "mid-right" ? "w-52 h-52" :
-                        cell.id === "bottom-right" ? "w-44 h-44" :
-                        "w-72 h-72"
-                      } object-contain drop-shadow-2xl transition-all duration-500 group-hover:scale-110 ${cell.label === "PawBooth" ? "rounded-3xl" : ""}`}
-                    />
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center p-6 z-10 pointer-events-none">
-                    <span className="bento-label">{cell.label}</span>
+              return (
+                <div
+                  key={idx}
+                  onMouseEnter={() => !isDetailActive && setHoveredIndex(idx)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  onClick={() => setActiveCol(idx)}
+                  className={`relative flex flex-col items-center justify-center cursor-pointer transition-all duration-[300ms]
+                    ${isDetailActive ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}
+                  `}
+                  style={{
+                    flex: isHovered ? 1.6 : (isOtherHovered ? 0.8 : 1),
+                    transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+                    background: "rgba(255, 255, 255, 0.08)",
+                    backdropFilter: "blur(24px) saturate(120%)",
+                    WebkitBackdropFilter: "blur(24px) saturate(120%)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                    borderRadius: "40px",
+                    boxShadow: isHovered ? "0 20px 40px rgba(0,0,0,0.3)" : "0 10px 20px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <div className={`transition-all duration-500 flex flex-col items-center ${isHovered ? 'scale-110' : 'scale-100'}`}>
+                    <span className="material-symbols-outlined text-6xl text-white mb-4 opacity-80" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      {pillar.icon}
+                    </span>
+                    <h3 className="text-3xl font-black text-white uppercase tracking-wider mb-2 drop-shadow-lg text-center whitespace-pre-line leading-tight">
+                      {pillar.title}
+                    </h3>
+                    <p className={`text-white/40 uppercase tracking-[0.3em] text-[10px] font-bold transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+                      {pillar.subtitle}
+                    </p>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-          {newsletterCell && activeId === newsletterCell.id && islandBounds && (
-            <div
-              className="newsletter-canvas"
-              style={{
-                left: `${islandBounds.x}px`,
-                top: `${islandBounds.y}px`,
-                width: `${islandBounds.w}px`,
-                height: `${islandBounds.h}px`,
-                opacity: islandVisible ? 1 : 0,
-                transition: "opacity 500ms ease",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${48}px`,
-                  top: `${48}px`,
-                  width: `${Math.min(islandBounds.w - 96, 980)}px`,
-                  maxHeight: `${Math.max(islandBounds.h - 96, 0)}px`,
-                  overflow: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                }}
-              >
-                <p style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: "42px" }}>
-                  Stay in the Loop. No spam.
-                </p>
-                <p style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: "42px" }}>Just paws, people, and good news.</p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify" }}>
-                  Be the first to hear about upcoming meetups, seasonal gatherings, and special community moments. Our
-                  newsletter brings you event announcements, member highlights, and helpful tips for enjoying life with
-                  your pet.
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "32px" }}>Subscribe to receive:</p>
-                <ul style={{ fontWeight: 600, fontSize: "22px" }}>
-                  <li>Upcoming PawMatch events</li>
-                  <li>Featured member stories</li>
-                  <li>Pet-friendly activity ideas</li>
-                  <li>Community updates</li>
-                </ul>
-                <p style={{ fontWeight: 600, fontSize: "22px", color: "rgba(255,255,255,0.7)", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px", marginTop: "16px" }}>
-                  Join the list and never miss a chance to connect.
-                </p>
-              </div>
-            </div>
-          )}
-          {waiverCell && activeId === waiverCell.id && islandBounds && (
-            <div
-              className="newsletter-canvas"
-              style={{
-                left: `${islandBounds.x}px`,
-                top: `${islandBounds.y}px`,
-                width: `${islandBounds.w}px`,
-                height: `${islandBounds.h}px`,
-                opacity: islandVisible ? 1 : 0,
-                transition: "opacity 500ms ease",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${48}px`,
-                  top: `${48}px`,
-                  width: `${Math.min(islandBounds.w - 96, 980)}px`,
-                  maxHeight: `${Math.max(islandBounds.h - 96, 0)}px`,
-                  overflow: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "16px",
-                }}
-              >
-                <p style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: "42px", lineHeight: "1.1" }}>
-                  Community Safety <br /> & Liability Notice
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify", color: "rgba(255,255,255,0.9)" }}>
-                  PawMatch is a friendly meetup space designed for pets and their humans<br></br>
-                  to socialize in a relaxed environment. By participating in PawMatch <br></br>
-                  gatherings, members acknowledge that they are responsible for the <br></br>
-                  behavior and well-being of their pets.
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "32px", color: "#FFFFFF", marginTop: "12px" }}>Please ensure that your pet:</p>
-                <ul style={{ fontWeight: 600, fontSize: "22px", listStyle: "disc", paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <li>Is healthy and comfortable around other animals</li>
-                  <li>Is supervised at all times</li>
-                  <li>Is up to date with required vaccinations where applicable</li>
-                </ul>
-                <p style={{ fontWeight: 600, fontSize: "20px", color: "rgba(255,255,255,0.7)", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px", marginTop: "16px" }}>
-                  All participants join activities at their own discretion. PawMatch encourages a respectful and
-                  mindful environment so everyone — humans and animals alike — can enjoy the experience safely.
-                </p>
-              </div>
-            </div>
-          )}
-          {howItWorksCell && activeId === howItWorksCell.id && islandBounds && (
-            <div
-              className="newsletter-canvas"
-              style={{
-                left: `${islandBounds.x}px`,
-                top: `${islandBounds.y}px`,
-                width: `${islandBounds.w}px`,
-                height: `${islandBounds.h}px`,
-                opacity: islandVisible ? 1 : 0,
-                transition: "opacity 500ms ease",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${48}px`,
-                  top: `${48}px`,
-                  width: `${Math.min(islandBounds.w - 96, 980)}px`,
-                  maxHeight: `${Math.max(islandBounds.h - 96, 0)}px`,
-                  overflow: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "24px",
-                }}
-              >
-                <p style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: "42px", lineHeight: "1.1" }}>
-                  Simple. Friendly. <br /> Tail-Wag Approved.
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify", color: "rgba(255,255,255,0.9)" }}>
-                  PawMatch is built around relaxed meetups where pets naturally bring people together.
-                </p>
+              );
+            })}
+          </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
-                  <p style={{ fontWeight: 700, fontSize: "32px", color: "#FFFFFF" }}>Bring Your Companion</p>
-                  <p style={{ fontWeight: 600, fontSize: "20px", color: "rgba(255,255,255,0.8)" }}>
-                    Arrive with your pet and step into a <br></br>
-                    welcoming community of animal lovers.
-                  </p>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
-                  <p style={{ fontWeight: 700, fontSize: "32px", color: "#FFFFFF" }}>Meet & Mingle</p>
-                  <p style={{ fontWeight: 600, fontSize: "20px", color: "rgba(255,255,255,0.8)" }}>
-                    Pets explore and play while their <br></br>humans connect and share stories.
-                  </p>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
-                  <p style={{ fontWeight: 700, fontSize: "32px", color: "#FFFFFF" }}>Enjoy the Moment</p>
-                  <p style={{ fontWeight: 600, fontSize: "20px", color: "rgba(255,255,255,0.8)" }}>
-                    Relax and socialize. Enjoy a space where pets create the conversation.
-                  </p>
-                </div>
-
-                <p style={{ fontWeight: 600, fontSize: "22px", fontStyle: "italic", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px", marginTop: "16px", color: "rgba(255,255,255,0.7)" }}>
-                  Every meetup is designed to feel casual, welcoming, and community-driven.
-                </p>
-              </div>
-            </div>
-          )}
-          {memberStoriesCell && activeId === memberStoriesCell.id && islandBounds && (
-            <div
-              className="newsletter-canvas"
-              style={{
-                left: `${islandBounds.x}px`,
-                top: `${islandBounds.y}px`,
-                width: `${islandBounds.w}px`,
-                height: `${islandBounds.h}px`,
-                opacity: islandVisible ? 1 : 0,
-                transition: "opacity 500ms ease",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${48}px`,
-                  top: `${48}px`,
-                  width: `${Math.min(islandBounds.w - 96, 980)}px`,
-                  maxHeight: `${Math.max(islandBounds.h - 96, 0)}px`,
-                  overflow: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                }}
-              >
-                <p style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: "42px" }}>
-                  Real Moments from the Community
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify" }}>
-                  PawMatch is full of small moments that turn into lasting memories. From shy puppies making their
-                  first friends to seasoned companions happily greeting familiar faces, every gathering brings new
-                  stories.
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "32px" }}>Members often share moments like:</p>
-                <ul style={{ fontWeight: 600, fontSize: "22px" }}>
-                  <li>First friendships between pets</li>
-                  <li>Unexpected conversations with fellow pet lovers</li>
-                  <li>Funny encounters and playful chaos</li>
-                  <li>Quiet afternoons watching pets explore</li>
-                </ul>
-                <p style={{ fontWeight: 600, fontSize: "22px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px", marginTop: "16px", color: "rgba(255,255,255,0.7)" }}>
-                  These stories remind us why bringing animals together creates such a special kind of community.
-                </p>
-              </div>
-            </div>
-          )}
-          {photoBoothCell && activeId === photoBoothCell.id && islandBounds && (
-            <div
-              className="newsletter-canvas"
-              style={{
-                left: `${islandBounds.x}px`,
-                top: `${islandBounds.y}px`,
-                width: `${islandBounds.w}px`,
-                height: `${islandBounds.h}px`,
-                opacity: islandVisible ? 1 : 0,
-                transition: "opacity 500ms ease",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${48}px`,
-                  top: `${48}px`,
-                  width: `${Math.min(islandBounds.w - 96, 980)}px`,
-                  maxHeight: `${Math.max(islandBounds.h - 96, 0)}px`,
-                  overflow: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                }}
-              >
-                <p style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: "42px" }}>
-                  Capture the Joy
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify" }}>
-                  Some moments deserve to be remembered. The Paw Moments photo booth is where playful expressions,
-                  wagging tails, and curious noses get captured forever. Whether it's a proud pose, a goofy grin, or a
-                  spontaneous cuddle, every snapshot reflects the spirit of the community.
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "32px" }}>Expect to see:</p>
-                <ul style={{ fontWeight: 600, fontSize: "22px" }}>
-                  <li>playful pet portraits</li>
-                  <li>candid meetup moments</li>
-                  <li>happy humans and their companions</li>
-                  <li>spontaneous photobombs from curious pets</li>
-                </ul>
-                <p style={{ fontWeight: 600, fontSize: "22px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px", marginTop: "16px", color: "rgba(255,255,255,0.7)" }}>
-                  Because the best photos are the ones where nobody is trying too hard.
-                </p>
-              </div>
-            </div>
-          )}
-          {contributorCell && activeId === contributorCell.id && islandBounds && (
-            <div
-              className="newsletter-canvas"
-              style={{
-                left: `${islandBounds.x}px`,
-                top: `${islandBounds.y}px`,
-                width: `${islandBounds.w}px`,
-                height: `${islandBounds.h}px`,
-                opacity: islandVisible ? 1 : 0,
-                transition: "opacity 500ms ease",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${48}px`,
-                  top: `${48}px`,
-                  width: `${Math.min(islandBounds.w - 96, 980)}px`,
-                  maxHeight: `${Math.max(islandBounds.h - 96, 0)}px`,
-                  overflow: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                }}
-              >
-                <p style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: "42px" }}>
-                  Help Grow the Community
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify" }}>
-                  PawMatch thrives because members bring their ideas, creativity, and energy. If you enjoy the
-                  community and want to help shape it, there are many ways to contribute.
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "32px" }}>You can help by:</p>
-                <ul style={{ fontWeight: 600, fontSize: "22px" }}>
-                  <li>sharing stories or photos from meetups</li>
-                  <li>suggesting fun activities or event ideas</li>
-                  <li>helping organize community moments</li>
-                  <li>welcoming new members</li>
-                </ul>
-                <p style={{ fontWeight: 600, fontSize: "22px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px", marginTop: "16px", color: "rgba(255,255,255,0.7)" }}>
-                  Small contributions make a big difference in keeping the community vibrant and welcoming.
-                </p>
-              </div>
-            </div>
-          )}
-          {contactCell && activeId === contactCell.id && islandBounds && (
-            <div
-              className="newsletter-canvas"
-              style={{
-                left: `${islandBounds.x}px`,
-                top: `${islandBounds.y}px`,
-                width: `${islandBounds.w}px`,
-                height: `${islandBounds.h}px`,
-                opacity: islandVisible ? 1 : 0,
-                transition: "opacity 500ms ease",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${48}px`,
-                  top: `${48}px`,
-                  width: `${Math.min(islandBounds.w - 96, 980)}px`,
-                  maxHeight: `${Math.max(islandBounds.h - 96, 0)}px`,
-                  overflow: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                }}
-              >
-                <p style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: "42px" }}>
-                  Get in Touch
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify" }}>
-                  Questions, ideas, or just want to say hello? We'd love to hear from you.
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify" }}>
-                  Whether you're curious about joining a meetup, collaborating with the community, or simply learning
-                  more about PawMatch, feel free to reach out.
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify" }}>
-                  PawMatch is built around open conversation, so don't hesitate to connect.
-                </p>
-                <p style={{ fontWeight: 600, fontSize: "22px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px", marginTop: "16px", color: "rgba(255,255,255,0.7)" }}>
-                  We're always happy to hear from fellow animal lovers.
-                </p>
-              </div>
-            </div>
-          )}
-          {founderCell && activeId === founderCell.id && islandBounds && (
-            <div
-              className="newsletter-canvas"
-              style={{
-                left: `${islandBounds.x}px`,
-                top: `${islandBounds.y}px`,
-                width: `${islandBounds.w}px`,
-                height: `${islandBounds.h}px`,
-                opacity: islandVisible ? 1 : 0,
-                transition: "opacity 500ms ease",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${48}px`,
-                  top: `${48}px`,
-                  width: `${Math.min(islandBounds.w - 96, 980)}px`,
-                  maxHeight: `${Math.max(islandBounds.h - 96, 0)}px`,
-                  overflow: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "16px",
-                }}
-              >
-                <p style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: "42px", lineHeight: "1.1" }}>
-                  The Furry Vision <br /> Behind PawMatch
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify", color: "rgba(255,255,255,0.9)" }}>
-                  PawMatch was born from a simple observation: pets are the world's best icebreakers. Our founder
-                  believed that by creating spaces where animals feel at home, we'd naturally create spaces where
-                  people feel at home too.
-                </p>
-                <p style={{ fontWeight: 600, fontSize: "22px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px", marginTop: "16px", color: "rgba(255,255,255,0.7)" }}>
-                  Building a community where every tail wag tells a story.
-                </p>
-              </div>
-            </div>
-          )}
-          {eventsCell && activeId === eventsCell.id && islandBounds && (
-            <div
-              className="newsletter-canvas"
-              style={{
-                left: `${islandBounds.x}px`,
-                top: `${islandBounds.y}px`,
-                width: `${islandBounds.w}px`,
-                height: `${islandBounds.h}px`,
-                opacity: islandVisible ? 1 : 0,
-                transition: "opacity 500ms ease",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${48}px`,
-                  top: `${48}px`,
-                  width: `${Math.min(islandBounds.w - 96, 980)}px`,
-                  maxHeight: `${Math.max(islandBounds.h - 96, 0)}px`,
-                  overflow: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "16px",
-                }}
-              >
-                <p style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: "42px", lineHeight: "1.1" }}>
-                  Join Our Next <br /> Local Meetup
-                </p>
-                <p style={{ fontWeight: 700, fontSize: "22px", textAlign: "justify", color: "rgba(255,255,255,0.9)" }}>
-                  From weekend garden strolls to cozy cafe chats, our events are designed for maximum relaxation. No
-                  pressure, just good vibes and fluffy companions.
-                </p>
-                <p style={{ fontWeight: 600, fontSize: "22px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "16px", marginTop: "16px", color: "rgba(255,255,255,0.7)" }}>
-                  Find a gathering near you and start your PawMatch journey.
-                </p>
-              </div>
-            </div>
-          )}
+          {/* Detail Canvas */}
+          <div
+          className={`absolute inset-0 flex flex-col items-center justify-center p-12 pointer-events-auto transition-all duration-[300ms] ease-in-out
+              ${showCanvas ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}
+            `}
+            style={{
+              // Used for back button alignment across the canvas
+              "--back-offset": "24px",
+              "--back-size": "56px",
+              background: "rgba(255, 255, 255, 0.03)",
+              backdropFilter: "blur(40px) saturate(150%)",
+              WebkitBackdropFilter: "blur(40px) saturate(150%)",
+              borderRadius: "40px",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+            }}
+          >
+            {activeCol !== null && (
+              <>
+                <button
+                  onClick={() => setActiveCol(null)}
+                  className="absolute flex items-center justify-center w-14 h-14 rounded-full text-white/50 hover:text-white bg-white/5 hover:bg-white/10 transition-all group lg:w-14 lg:h-14"
+                  style={{
+                    top: "var(--back-offset)",
+                    left: "var(--back-offset)",
+                  }}
+                >
+                  <span className="material-symbols-outlined text-3xl font-black group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                </button>
+                {getPillarContent(activeCol, email, setEmail, emailError, handleNewsletterSubmit)}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
+}
+
+function getPillarContent(
+  idx: number,
+  email: string,
+  setEmail: (val: string) => void,
+  emailError: boolean,
+  handleNewsletterSubmit: () => void
+) {
+  switch (idx) {
+    case 0: // About the Founder
+      return (
+        <div className="max-w-4xl mx-auto text-center space-y-12">
+          <div className="inline-block p-1 rounded-full bg-white/10 mb-4 scale-110">
+            <div className="w-28 h-28 rounded-full bg-white/20 overflow-hidden lg:w-36 lg:h-36">
+              <img src="/AboutTheFounder.png" alt="Founder" className="w-full h-full object-cover grayscale opacity-80" />
+            </div>
+          </div>
+          <p className="text-3xl font-medium text-white/90 leading-[1.3] text-balance italic px-12 lg:text-4xl">
+            "PawMatch started as a simple idea: that our pets shouldn't just be our best friends, they should be the bridge that connects us all."
+          </p>
+          <div className="flex flex-col items-center gap-6">
+            <span className="text-base font-black uppercase tracking-[0.6em] text-white/40">Founder & Pack Leader</span>
+            <div className="w-16 h-1 bg-white/20 rounded-full" />
+          </div>
+        </div>
+      );
+    case 1: // Events
+      return (
+        <div className="flex w-full h-full items-center justify-around">
+          {/* 70% Left: Events */}
+          <div className="h-[350px] flex flex-col justify-between space-y-10 border-2 border-red-500">
+            <h4 className="text-4xl font-black text-white uppercase tracking-tighter mb-10 lg:text-5xl">Next Meetups</h4>
+            <div className="grid grid-cols-2 gap-8">
+              {[
+                { title: "Winter Paws", date: "Dec 20", location: "Leisure Valley" },
+                { title: "Doggy Brunch", date: "Jan 12", location: "Sarabha Nagar" }
+              ].map((ev, i) => (
+                <div key={i} className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:bg-white/10 transition-colors group">
+                  <div className="flex justify-between items-start mb-6">
+                    <span className="text-base font-black uppercase tracking-[0.2em] text-white/50">{ev.date}</span>
+                    <span className="material-symbols-outlined text-2xl text-white/20 group-hover:text-white transition-colors lg:text-3xl">arrow_forward</span>
+                  </div>
+                  <h5 className="text-2xl font-black text-white uppercase mb-2 lg:text-3xl">{ev.title}</h5>
+                  <p className="text-base text-white/40 uppercase tracking-[0.1em] font-bold lg:text-lg">{ev.location}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Vertical Separator */}
+          <div className="w-px h-[350px] bg-white/10" />
+
+          {/* 30% Right: Newsletter */}
+          <div className="h-[350px] flex flex-col justify-between space-y-12 pr-6 border-2 border-red-500">
+            <div className="space-y-3">
+              <span className="text-lg font-black uppercase tracking-[0.4em] text-white/50">Weekly Paws</span>
+              <h4 className="text-3xl font-black text-white uppercase leading-none tracking-tight whitespace-nowrap lg:text-4xl">Stay in the Loop</h4>
+            </div>
+            <div className="space-y-6">
+              <div className="relative">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="YOUR@EMAIL.COM"
+                  className={`w-full bg-white/5 border rounded-full px-8 py-3 text-base font-black tracking-widest uppercase placeholder:text-white/60 focus:outline-none transition-colors caret-white text-white
+                    ${emailError ? 'border-red-500/50 focus:border-red-500' : 'border-white/20 focus:border-white/40'}
+                  `}
+                />
+                {emailError && (
+                  <p className="absolute -bottom-6 left-6 text-[10px] font-black uppercase tracking-widest text-red-500">Invalid Email Address</p>
+                )}
+              </div>
+              <button
+                onClick={handleNewsletterSubmit}
+                className="w-full bg-white text-black font-black uppercase text-base tracking-[0.2em] py-3 rounded-full hover:bg-[#a8d5ba] hover:text-white transition-all shadow-xl flex items-center justify-center mt-4"
+              >
+                Join the Club
+              </button>
+            </div>
+            <p className="text-base text-white/40 uppercase tracking-[0.2em] font-black leading-relaxed">No spam. Just wagging tails and weekend plans.</p>
+          </div>
+        </div>
+      );
+    case 2: // Paw Booth
+      return (
+        <div
+          className="flex w-full h-full items-center justify-start"
+          style={{ paddingLeft: 32, paddingRight: 32, gap: 32 }}
+        >
+          {/* Left: Gallery Archive */}
+          <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-between h-[540px] w-full max-w-[760px] mx-auto border-2 border-red-500">
+              <h4 className="text-4xl font-black text-white uppercase tracking-tighter text-center lg:text-5xl">PawBooth Archive</h4>
+              <div className="grid grid-cols-3 gap-8 h-80 w-full px-4">
+                <div className="bg-white/5 rounded-[2.5rem] border border-white/10 overflow-hidden relative group">
+                  <span className="absolute inset-0 flex items-center justify-center text-white/20 text-sm font-black uppercase tracking-widest">Gallery Preview</span>
+                </div>
+                <div className="bg-white/5 rounded-[2.5rem] border border-white/10 overflow-hidden" />
+                <div className="bg-white/10 rounded-[2.5rem] border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors">
+                  <span className="material-symbols-outlined text-white/40 text-5xl lg:text-6xl">add_to_photos</span>
+                </div>
+              </div>
+              <p className="text-xl text-white/50 leading-relaxed max-w-[800px] text-center lg:text-2xl">
+                Highlights or memories of our journey so far. Thousands of high-res tails from every PawMatch session since 2023.
+              </p>
+            </div>
+          </div>
+
+          {/* Vertical Separator */}
+          <div className="w-px h-[500px] bg-white/10 shrink-0" />
+
+          {/* Right: Submit */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="flex flex-col items-center justify-between h-[540px] w-full max-w-[420px] mx-auto border-2 border-red-500">
+              <div className="w-40 h-40 rounded-full bg-[#e5989b]/20 flex items-center justify-center shadow-inner shrink-0">
+                <span className="material-symbols-outlined text-[#e5989b] text-7xl">add_photo_alternate</span>
+              </div>
+              
+              <h4 className="text-3xl font-black text-white uppercase tracking-widest leading-tight whitespace-nowrap lg:text-4xl">
+                Share the Love
+              </h4>
+
+              <p className="text-lg font-bold text-white/40 uppercase tracking-[0.3em] leading-tight max-w-[440px]">
+                <span className="block">Submit your best shots</span>
+                <span className="block">of your furry friends.</span>
+              </p>
+
+              <button className="w-full bg-white text-black font-black uppercase text-lg tracking-widest h-14 rounded-full hover:bg-[#a8d5ba] hover:text-white transition-all flex items-center justify-center px-10 whitespace-nowrap shadow-xl">
+                Submit Your Pictures
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    case 3: // Let's Grow Together
+      return (
+        <div className="flex w-full h-full items-center justify-around">
+          {/* 50% Left: Community */}
+          <div className="w-full max-w-[600px] h-[350px] flex flex-col justify-between space-y-12 border-2 border-red-500">
+            <h4 className="text-4xl font-black text-white uppercase tracking-tighter mb-6 lg:text-5xl">The Pack</h4>
+            <div className="flex-1">
+              <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:border-white/40 transition-all cursor-pointer group shadow-xl h-full flex flex-col justify-start">
+                <div className="flex items-center justify-between mb-6">
+                  <h5 className="text-3xl font-black text-white uppercase tracking-tight lg:text-4xl">Become a Contributor</h5>
+                  <span
+                    className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors"
+                    style={{ fontSize: 96 }}
+                  >
+                    volunteer_activism
+                  </span>
+                </div>
+                <p className="text-base text-white/40 leading-relaxed font-medium lg:text-lg">Help us organize and maintain our community spaces.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Vertical Separator */}
+          <div className="w-[2px] h-[350px] bg-white/50 shrink-0" />
+
+          {/* 50% Right: Collab */}
+          <div className="w-full max-w-[500px] h-[350px] flex flex-col justify-between space-y-12 border-2 border-red-500">
+            <h4 className="text-4xl font-black text-white uppercase tracking-tighter mb-6 lg:text-5xl">Strategic</h4>
+            <div className="bg-white/10 p-12 rounded-[3rem] border border-white/20 relative overflow-hidden group hover:bg-white/20 transition-all cursor-pointer h-full flex flex-col justify-between shadow-2xl">
+              <span className="material-symbols-outlined absolute -top-12 -right-12 text-[20rem] text-white/5 group-hover:scale-110 transition-transform">handshake</span>
+              <div className="relative z-10">
+                <h5 className="text-3xl font-black text-white uppercase mb-6 leading-[0.95] tracking-tighter lg:text-4xl">Partners &<br />Collaborations</h5>
+                <p className="text-base text-white/60 leading-relaxed mb-8 font-medium max-w-lg lg:text-lg">
+                  For brands, venues, and veterinary partners looking to support the local pet ecosystem.
+                </p>
+                <button className="text-sm font-black uppercase tracking-[0.4em] text-white/60 group-hover:text-white transition-colors flex items-center gap-4 border-b border-white/20 pb-2 lg:text-base">
+                  Inquire Now <span className="material-symbols-outlined text-2xl">north_east</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    default:
+      return null;
+  }
 }
