@@ -134,6 +134,81 @@ export default function Events() {
                 Map View
             </button>
 
+            {/* Newsletter Section */}
+            <section id="newsletter" className="mt-20 px-6 py-16 bg-white/5 border-t border-white/10">
+                <div className="max-w-xl mx-auto text-center space-y-6">
+                    <h2 className="text-3xl font-black tracking-tight text-white">Join the Pack</h2>
+                    <p className="text-white/40 text-sm">
+                        Get weekly updates on meetups, park events, and exclusive community perks delivered to your inbox.
+                    </p>
+                    <div className="relative group/input mt-8">
+                        <input
+                            type="email"
+                            placeholder="your@email.com"
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-[#a8d5ba]/40 transition-all"
+                        />
+                        <button className="absolute right-2 top-2 bg-white text-black text-[10px] font-black uppercase px-6 py-3 rounded-xl hover:bg-[#a8d5ba] hover:text-white transition-all">
+                            Subscribe
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* Safety Guidelines Section */}
+            <section id="safety-guidelines" className="px-6 py-20 bg-black/40 border-t border-white/5">
+                <div className="max-w-2xl mx-auto space-y-12">
+                    <div className="text-center">
+                        <h2 className="text-3xl font-black tracking-tight text-white">Safety First</h2>
+                        <p className="text-white/40 text-sm mt-3">Essential rules for a happy, safe meetup experience.</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3 text-[#a8d5ba]">
+                                <span className="material-symbols-outlined">verified</span>
+                                <h4 className="font-bold text-sm uppercase tracking-wider">Vaccinations</h4>
+                            </div>
+                            <p className="text-xs text-white/40 leading-relaxed">
+                                All pets must be up-to-date on Rabies, Distemper, and Parvo vaccinations.
+                            </p>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3 text-[#a8d5ba]">
+                                <span className="material-symbols-outlined">pan_tool</span>
+                                <h4 className="font-bold text-sm uppercase tracking-wider">Ask First</h4>
+                            </div>
+                            <p className="text-xs text-white/40 leading-relaxed">
+                                Always ask the owner before approaching or petting another animal.
+                            </p>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3 text-[#a8d5ba]">
+                                <span className="material-symbols-outlined">link</span>
+                                <h4 className="font-bold text-sm uppercase tracking-wider">On Leash</h4>
+                            </div>
+                            <p className="text-xs text-white/40 leading-relaxed">
+                                Keep your pets leashed unless in designated off-leash zones.
+                            </p>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3 text-[#a8d5ba]">
+                                <span className="material-symbols-outlined">clean_hands</span>
+                                <h4 className="font-bold text-sm uppercase tracking-wider">Clean Up</h4>
+                            </div>
+                            <p className="text-xs text-white/40 leading-relaxed">
+                                Owners are strictly responsible for cleaning up after their pets.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="text-center pt-8">
+                        <Link href="/safety-guidelines" className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-white transition-all underline decoration-white/10 underline-offset-8">
+                            View Full Community Guidelines
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
             <MobileBottomNav />
         </>
     );

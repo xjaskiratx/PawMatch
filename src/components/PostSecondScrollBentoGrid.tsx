@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function PostSecondScrollBentoGrid({
   opacity = 1,
@@ -15,6 +15,22 @@ export default function PostSecondScrollBentoGrid({
   const [showCanvas, setShowCanvas] = useState(false);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<{ title: string; date: string; location: string } | null>(null);
+  const [showGallery, setShowGallery] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [submitError, setSubmitError] = useState(false);
+  const [showCollabForm, setShowCollabForm] = useState(false);
+  const [showContributorForm, setShowContributorForm] = useState(false);
+  const [collabType, setCollabType] = useState("Brands");
+  const [collabSubject, setCollabSubject] = useState("");
+  const [collabMessage, setCollabMessage] = useState("");
+  const [collabError, setCollabError] = useState(false);
+
+  const [contributorType, setContributorType] = useState("General Help");
+  const [contributorSubject, setContributorSubject] = useState("");
+  const [contributorMessage, setContributorMessage] = useState("");
+  const [contributorError, setContributorError] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navbarBottomOffset = 98;
   const footerTopOffset = 120; // Estimated height/offset of footer pill area
@@ -32,17 +48,40 @@ export default function PostSecondScrollBentoGrid({
       setShowCanvas(false);
       setEmail("");
       setEmailError(false);
+      setSelectedEvent(null);
+      setShowGallery(false);
+      setSelectedFile(null);
+      setSubmitError(false);
+      setShowCollabForm(false);
+      setShowContributorForm(false);
+      setCollabType("Brands");
+      setCollabSubject("");
+      setCollabMessage("");
+      setCollabError(false);
+      setContributorType("General Help");
+      setContributorSubject("");
+      setContributorMessage("");
+      setContributorError(false);
     }
   }, [visible]);
 
   useEffect(() => {
     if (activeCol !== null) {
-      const timer = setTimeout(() => setShowCanvas(true), 300);
+      // Bloom in snappily after col transition is underway
+      const timer = setTimeout(() => setShowCanvas(true), 200);
       return () => clearTimeout(timer);
     } else {
       setShowCanvas(false);
     }
   }, [activeCol]);
+
+  const handleCloseCanvas = () => {
+    setShowCanvas(false);
+    // Grid return staggering for a layered effect (faster 400ms delay)
+    setTimeout(() => {
+      setActiveCol(null);
+    }, 400);
+  };
 
   useEffect(() => {
     const updateScale = () => {
@@ -65,10 +104,35 @@ export default function PostSecondScrollBentoGrid({
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setSubmitError(false);
+      alert(`Photo "${file.name}" selected! Ready to submit.`);
+    }
+  };
+
+  const handleSubmitPhoto = () => {
+    if (!selectedFile) {
+      setSubmitError(true);
+      setTimeout(() => setSubmitError(false), 500);
+    } else {
+      alert(`Success! "${selectedFile.name}" has been submitted to the Paw Booth.`);
+      // Clear after successful "submission"
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 pointer-events-none z-[160]"
-      style={{ opacity, transition: "opacity 400ms ease-in-out", willChange: "opacity" }}
+      style={{
+        opacity,
+        transition: "opacity 600ms cubic-bezier(0.16, 1, 0.3, 1)",
+        willChange: "opacity"
+      }}
     >
       <div
         className="absolute inset-0"
@@ -96,12 +160,14 @@ export default function PostSecondScrollBentoGrid({
             height: "700px",
             transform: `translate(-50%, -50%) scale(${scale})`,
             transformOrigin: "center",
-            borderLeft: "2px solid rgba(96, 165, 250, 0.7)",
-            borderRight: "2px solid rgba(251, 146, 60, 0.8)",
           }}
         >
           {/* 4-Column Accordion */}
-          <div className="flex w-full h-full gap-6 pointer-events-auto">
+          <div
+            className="flex w-full h-full gap-6 pointer-events-auto"
+            style={{ willChange: "flex" }}
+            onMouseLeave={() => !activeCol && setHoveredIndex(null)}
+          >
             {pillars.map((pillar, idx) => {
               const isHovered = hoveredIndex === idx;
               const isOtherHovered = hoveredIndex !== null && hoveredIndex !== idx;
@@ -111,27 +177,43 @@ export default function PostSecondScrollBentoGrid({
                 <div
                   key={idx}
                   onMouseEnter={() => !isDetailActive && setHoveredIndex(idx)}
-                  onMouseLeave={() => setHoveredIndex(null)}
                   onClick={() => setActiveCol(idx)}
-                  className={`relative flex flex-col items-center justify-center cursor-pointer transition-all duration-[300ms]
-                    ${isDetailActive ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}
+                  className={`relative flex flex-col items-center justify-center cursor-pointer
+                    ${isDetailActive ? 'opacity-0 pointer-events-none' : 'opacity-100 scale-100'}
                   `}
                   style={{
-                    flex: isHovered ? 1.6 : (isOtherHovered ? 0.8 : 1),
-                    transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+                    // Lock flex ratios during transition to prevent snap/jitter
+                    flex: isDetailActive
+                      ? (activeCol === idx ? 1.6 : 0.8)
+                      : (isHovered ? 1.6 : (isOtherHovered ? 0.8 : 1)),
+                    // Return transition is 1000ms "Soft Settle" for buttery effect
+                    transition: isDetailActive
+                      ? "flex 600ms cubic-bezier(0.16, 1, 0.3, 1), opacity 600ms cubic-bezier(0.16, 1, 0.3, 1), transform 600ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 600ms cubic-bezier(0.16, 1, 0.3, 1)"
+                      : "flex 1000ms cubic-bezier(0.3, 1, 0.4, 1), opacity 800ms cubic-bezier(0.16, 1, 0.3, 1), transform 800ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 800ms cubic-bezier(0.16, 1, 0.3, 1)",
+                    willChange: "flex, transform, opacity, box-shadow",
                     background: "rgba(255, 255, 255, 0.08)",
                     backdropFilter: "blur(24px) saturate(120%)",
                     WebkitBackdropFilter: "blur(24px) saturate(120%)",
                     border: "1px solid rgba(255, 255, 255, 0.15)",
                     borderRadius: "40px",
                     boxShadow: isHovered ? "0 20px 40px rgba(0,0,0,0.3)" : "0 10px 20px rgba(0,0,0,0.1)",
+                    transform: "translateZ(0)",
+                    backfaceVisibility: "hidden",
+                    WebkitBackfaceVisibility: "hidden",
+                    isolation: "isolate",
                   }}
                 >
-                  <div className={`transition-all duration-500 flex flex-col items-center ${isHovered ? 'scale-110' : 'scale-100'}`}>
+                  <div
+                    className="transition-all duration-500 flex flex-col items-center pointer-events-none"
+                    style={{
+                      transform: (isHovered && !isDetailActive) ? 'scale(1.1)' : 'scale(1)',
+                      willChange: 'transform',
+                    }}
+                  >
                     <span className="material-symbols-outlined text-6xl text-white mb-4 opacity-80" style={{ fontVariationSettings: "'FILL' 1" }}>
                       {pillar.icon}
                     </span>
-                    <h3 className="text-3xl font-black text-white uppercase tracking-wider mb-2 drop-shadow-lg text-center whitespace-pre-line leading-tight">
+                    <h3 className="text-3xl font-black text-white uppercase tracking-tight mb-2 drop-shadow-lg text-center whitespace-pre-line leading-tight">
                       {pillar.title}
                     </h3>
                     <p className={`text-white/40 uppercase tracking-[0.3em] text-[10px] font-bold transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
@@ -145,36 +227,105 @@ export default function PostSecondScrollBentoGrid({
 
           {/* Detail Canvas */}
           <div
-          className={`absolute inset-0 flex flex-col items-center justify-center p-12 pointer-events-auto transition-all duration-[300ms] ease-in-out
-              ${showCanvas ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}
+            className={`absolute inset-0 flex flex-col items-center justify-center p-12 pointer-events-auto transition-[opacity,transform] duration-[600ms]
+              ${showCanvas ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-0 pointer-events-none'}
             `}
             style={{
+              transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+              willChange: "transform, opacity",
               // Used for back button alignment across the canvas
               "--back-offset": "24px",
               "--back-size": "56px",
               background: "rgba(255, 255, 255, 0.03)",
               backdropFilter: "blur(40px) saturate(150%)",
               WebkitBackdropFilter: "blur(40px) saturate(150%)",
+              isolation: "isolate",
+              transform: "translate3d(0, 0, 0)",
               borderRadius: "40px",
               border: "1px solid rgba(255, 255, 255, 0.1)",
-            }}
+            } as any}
           >
             {activeCol !== null && (
               <>
                 <button
-                  onClick={() => setActiveCol(null)}
+                  onClick={() => {
+                    if (selectedEvent) {
+                      setSelectedEvent(null);
+                    } else if (showGallery) {
+                      setShowGallery(false);
+                    } else if (showCollabForm) {
+                      setShowCollabForm(false);
+                    } else if (showContributorForm) {
+                      setShowContributorForm(false);
+                    } else {
+                      handleCloseCanvas();
+                    }
+                  }}
                   className="absolute flex items-center justify-center w-14 h-14 rounded-full text-white/50 hover:text-white bg-white/5 hover:bg-white/10 transition-all group lg:w-14 lg:h-14"
                   style={{
                     top: "var(--back-offset)",
                     left: "var(--back-offset)",
+                    zIndex: 100, // Ensure it's above the blooming content
                   }}
                 >
                   <span className="material-symbols-outlined text-3xl font-black group-hover:-translate-x-1 transition-transform">arrow_back</span>
                 </button>
-                {getPillarContent(activeCol, email, setEmail, emailError, handleNewsletterSubmit)}
+                <style>{`
+                  @keyframes shake {
+                    0%, 100% { transform: translateX(0) translate3d(0,0,0); }
+                    20% { transform: translateX(-10px) translate3d(0,0,0); }
+                    40% { transform: translateX(10px) translate3d(0,0,0); }
+                    60% { transform: translateX(-10px) translate3d(0,0,0); }
+                    80% { transform: translateX(10px) translate3d(0,0,0); }
+                  }
+                  .animate-shake {
+                    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+                  }
+                `}</style>
+                {getPillarContent(
+                  activeCol,
+                  email,
+                  setEmail,
+                  emailError,
+                  handleNewsletterSubmit,
+                  selectedEvent,
+                  setSelectedEvent,
+                  fileInputRef,
+                  showGallery,
+                  setShowGallery,
+                  submitError,
+                  handleSubmitPhoto,
+                  showCollabForm,
+                  setShowCollabForm,
+                  collabType,
+                  setCollabType,
+                  collabSubject,
+                  setCollabSubject,
+                  collabMessage,
+                  setCollabMessage,
+                  collabError,
+                  setCollabError,
+                  showContributorForm,
+                  setShowContributorForm,
+                  contributorType,
+                  setContributorType,
+                  contributorSubject,
+                  setContributorSubject,
+                  contributorMessage,
+                  setContributorMessage,
+                  contributorError,
+                  setContributorError
+                )}
               </>
             )}
           </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            className="hidden"
+          />
         </div>
       </div>
     </div>
@@ -186,7 +337,34 @@ function getPillarContent(
   email: string,
   setEmail: (val: string) => void,
   emailError: boolean,
-  handleNewsletterSubmit: () => void
+  handleNewsletterSubmit: () => void,
+  selectedEvent: { title: string; date: string; location: string } | null,
+  setSelectedEvent: (ev: { title: string; date: string; location: string } | null) => void,
+  fileInputRef: React.RefObject<HTMLInputElement | null>,
+  showGallery: boolean,
+  setShowGallery: (val: boolean) => void,
+  submitError: boolean,
+  handleSubmitPhoto: () => void,
+  showCollabForm: boolean,
+  setShowCollabForm: (val: boolean) => void,
+  collabType: string,
+  setCollabType: (val: string) => void,
+  collabSubject: string,
+  setCollabSubject: (val: string) => void,
+  collabMessage: string,
+  setCollabMessage: (val: string) => void,
+  collabError: boolean,
+  setCollabError: (val: boolean) => void,
+  showContributorForm: boolean,
+  setShowContributorForm: (val: boolean) => void,
+  contributorType: string,
+  setContributorType: (val: string) => void,
+  contributorSubject: string,
+  setContributorSubject: (val: string) => void,
+  contributorMessage: string,
+  setContributorMessage: (val: string) => void,
+  contributorError: boolean,
+  setContributorError: (val: boolean) => void
 ) {
   switch (idx) {
     case 0: // About the Founder
@@ -208,150 +386,453 @@ function getPillarContent(
       );
     case 1: // Events
       return (
-        <div className="flex w-full h-full items-center justify-around">
-          {/* 70% Left: Events */}
-          <div className="h-[350px] flex flex-col justify-between space-y-10 border-2 border-red-500">
-            <h4 className="text-4xl font-black text-white uppercase tracking-tighter mb-10 lg:text-5xl">Next Meetups</h4>
-            <div className="grid grid-cols-2 gap-8">
-              {[
-                { title: "Winter Paws", date: "Dec 20", location: "Leisure Valley" },
-                { title: "Doggy Brunch", date: "Jan 12", location: "Sarabha Nagar" }
-              ].map((ev, i) => (
-                <div key={i} className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:bg-white/10 transition-colors group">
-                  <div className="flex justify-between items-start mb-6">
-                    <span className="text-base font-black uppercase tracking-[0.2em] text-white/50">{ev.date}</span>
-                    <span className="material-symbols-outlined text-2xl text-white/20 group-hover:text-white transition-colors lg:text-3xl">arrow_forward</span>
+        <div className="relative w-full h-full overflow-hidden">
+          {/* List View: Events + Newsletter */}
+          <div
+            className={`absolute inset-0 flex items-center justify-around transition-[opacity,transform] duration-[600ms] px-8
+              ${selectedEvent ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+            `}
+            style={{ transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
+          >
+            {/* 70% Left: Events */}
+            <div className="h-[350px] flex flex-col justify-between space-y-10 border-2 border-transparent">
+              <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-10 lg:text-5xl">Next Meetups</h4>
+              <div className="grid grid-cols-2 gap-8">
+                {[
+                  { title: "Winter Paws", date: "Dec 20", location: "Leisure Valley" },
+                  { title: "Doggy Brunch", date: "Jan 12", location: "Sarabha Nagar" }
+                ].map((ev, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setSelectedEvent(ev)}
+                    className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:bg-white/10 transition-colors group cursor-pointer"
+                    style={{
+                      transform: "translate3d(0, 0, 0)",
+                      backfaceVisibility: "hidden",
+                      WebkitBackfaceVisibility: "hidden",
+                      isolation: "isolate",
+                      willChange: "background-color, border-color",
+                    }}
+                  >
+                    <div className="flex justify-between items-start mb-6 pointer-events-none">
+                      <span className="text-base font-black uppercase tracking-[0.2em] text-white/50">{ev.date}</span>
+                      <span className="material-symbols-outlined text-2xl text-white/20 group-hover:text-white transition-colors lg:text-3xl">arrow_forward</span>
+                    </div>
+                    <div className="pointer-events-none">
+                      <h5 className="text-2xl font-black text-white uppercase tracking-tight mb-2 lg:text-3xl">{ev.title}</h5>
+                      <p className="text-base text-white/40 uppercase tracking-[0.1em] font-bold lg:text-lg">{ev.location}</p>
+                    </div>
                   </div>
-                  <h5 className="text-2xl font-black text-white uppercase mb-2 lg:text-3xl">{ev.title}</h5>
-                  <p className="text-base text-white/40 uppercase tracking-[0.1em] font-bold lg:text-lg">{ev.location}</p>
+                ))}
+              </div>
+            </div>
+
+            {/* Vertical Separator */}
+            <div className="w-px h-[350px] bg-white/10 mx-4" />
+
+            {/* 30% Right: Newsletter */}
+            <div className="h-[350px] flex flex-col justify-between space-y-12 pr-6 border-2 border-transparent">
+              <div className="space-y-3">
+                <span className="text-lg font-black uppercase tracking-[0.4em] text-white/50">Weekly Paws</span>
+                <h4 className="text-3xl font-black text-white uppercase leading-none tracking-tight whitespace-nowrap lg:text-4xl">Stay in the Loop</h4>
+              </div>
+              <div className="space-y-6">
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="YOUR@EMAIL.COM"
+                    className={`w-full bg-white/5 border rounded-full px-8 py-3 text-base font-black tracking-widest uppercase placeholder:text-white/60 focus:outline-none transition-colors caret-white text-white
+                      ${emailError ? 'border-red-500/50 focus:border-red-500' : 'border-white/20 focus:border-white/40'}
+                    `}
+                  />
+                  {emailError && (
+                    <p className="absolute -bottom-6 left-6 text-[10px] font-black uppercase tracking-widest text-red-500">Invalid Email Address</p>
+                  )}
                 </div>
-              ))}
+                <button
+                  onClick={handleNewsletterSubmit}
+                  className="w-full bg-white text-black font-black uppercase text-base tracking-[0.2em] py-3 rounded-full hover:bg-[#a8d5ba] hover:text-white transition-all shadow-xl flex items-center justify-center mt-4"
+                >
+                  Join the Club
+                </button>
+              </div>
+              <p className="text-base text-white/40 uppercase tracking-[0.2em] font-black leading-relaxed">No spam. Just wagging tails and weekend plans.</p>
             </div>
           </div>
 
-          {/* Vertical Separator */}
-          <div className="w-px h-[350px] bg-white/10" />
+          {/* Details View: Event Details */}
+          <div
+            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-[600ms] delay-100
+              ${selectedEvent ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+            `}
+            style={{ transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
+          >
+            {selectedEvent && (
+              <div className="text-center space-y-10 max-w-3xl px-6">
+                <div className="space-y-4">
+                  <span className="text-xl font-black uppercase tracking-[0.4em] text-white/40">
+                    {selectedEvent.date} • {selectedEvent.location}
+                  </span>
+                  <h4 className="text-6xl font-black text-white uppercase tracking-tight lg:text-8xl drop-shadow-2xl leading-none">
+                    {selectedEvent.title}
+                  </h4>
+                </div>
 
-          {/* 30% Right: Newsletter */}
-          <div className="h-[350px] flex flex-col justify-between space-y-12 pr-6 border-2 border-red-500">
-            <div className="space-y-3">
-              <span className="text-lg font-black uppercase tracking-[0.4em] text-white/50">Weekly Paws</span>
-              <h4 className="text-3xl font-black text-white uppercase leading-none tracking-tight whitespace-nowrap lg:text-4xl">Stay in the Loop</h4>
-            </div>
-            <div className="space-y-6">
-              <div className="relative">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="YOUR@EMAIL.COM"
-                  className={`w-full bg-white/5 border rounded-full px-8 py-3 text-base font-black tracking-widest uppercase placeholder:text-white/60 focus:outline-none transition-colors caret-white text-white
-                    ${emailError ? 'border-red-500/50 focus:border-red-500' : 'border-white/20 focus:border-white/40'}
-                  `}
-                />
-                {emailError && (
-                  <p className="absolute -bottom-6 left-6 text-[10px] font-black uppercase tracking-widest text-red-500">Invalid Email Address</p>
-                )}
+                <div className="w-24 h-1.5 bg-white/10 mx-auto rounded-full" />
+
+                <div className="space-y-6">
+                  <div className="flex flex-col items-center gap-4">
+                    <a
+                      href="https://ig.me/m/pawmatch.in"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-2xl font-black text-[#a8d5ba] uppercase tracking-widest leading-relaxed hover:text-white transition-colors lg:text-3xl underline decoration-2 underline-offset-8"
+                    >
+                      DM to register for the event.
+                    </a>
+                    <span className="text-lg font-black text-white/30 uppercase tracking-[0.4em]">
+                      Limited spots only!
+                    </span>
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={handleNewsletterSubmit}
-                className="w-full bg-white text-black font-black uppercase text-base tracking-[0.2em] py-3 rounded-full hover:bg-[#a8d5ba] hover:text-white transition-all shadow-xl flex items-center justify-center mt-4"
-              >
-                Join the Club
-              </button>
-            </div>
-            <p className="text-base text-white/40 uppercase tracking-[0.2em] font-black leading-relaxed">No spam. Just wagging tails and weekend plans.</p>
+            )}
           </div>
         </div>
       );
     case 2: // Paw Booth
       return (
-        <div
-          className="flex w-full h-full items-center justify-start"
-          style={{ paddingLeft: 32, paddingRight: 32, gap: 32 }}
-        >
-          {/* Left: Gallery Archive */}
-          <div className="flex flex-col items-center justify-center">
-            <div className="flex flex-col items-center justify-between h-[540px] w-full max-w-[760px] mx-auto border-2 border-red-500">
-              <h4 className="text-4xl font-black text-white uppercase tracking-tighter text-center lg:text-5xl">PawBooth Archive</h4>
-              <div className="grid grid-cols-3 gap-8 h-80 w-full px-4">
-                <div className="bg-white/5 rounded-[2.5rem] border border-white/10 overflow-hidden relative group">
-                  <span className="absolute inset-0 flex items-center justify-center text-white/20 text-sm font-black uppercase tracking-widest">Gallery Preview</span>
+        <div className="relative w-full h-full overflow-hidden">
+          {/* Main Paw Booth View */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-[opacity,transform] duration-[600ms]
+              ${showGallery ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+            `}
+            style={{
+              paddingLeft: 32,
+              paddingRight: 32,
+              gap: 64,
+              transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+            }}
+          >
+            {/* Left: Gallery Archive */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="flex flex-col items-center justify-between h-[540px] w-full max-w-[760px] mx-auto border-2 border-transparent">
+                <h4 className="text-4xl font-black text-white uppercase tracking-tight text-center lg:text-5xl">PawBooth Archive</h4>
+                <div className="grid grid-cols-3 gap-8 h-80 w-full px-4">
+                  <div className="col-span-3 bg-white/5 rounded-[2.5rem] border border-white/10 flex items-center justify-center">
+                    <span className="text-white/30 text-2xl font-black uppercase tracking-[0.3em]">No photos yet</span>
+                  </div>
                 </div>
-                <div className="bg-white/5 rounded-[2.5rem] border border-white/10 overflow-hidden" />
-                <div className="bg-white/10 rounded-[2.5rem] border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors">
-                  <span className="material-symbols-outlined text-white/40 text-5xl lg:text-6xl">add_to_photos</span>
-                </div>
+                <p className="text-xl text-white/50 leading-relaxed max-w-[800px] text-center lg:text-2xl">
+                  Highlights or memories of our journey so far. Thousands of high-res tails from every PawMatch session since 2023.
+                </p>
               </div>
-              <p className="text-xl text-white/50 leading-relaxed max-w-[800px] text-center lg:text-2xl">
-                Highlights or memories of our journey so far. Thousands of high-res tails from every PawMatch session since 2023.
-              </p>
+            </div>
+
+            {/* Vertical Separator */}
+            <div className="w-px h-[500px] bg-white/10 shrink-0 mx-4" />
+
+            {/* Right: Submit */}
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="flex flex-col items-center justify-between h-[540px] w-full max-w-[420px] mx-auto border-2 border-transparent">
+                <button
+                  type="button"
+                  className="group relative w-40 h-40 rounded-full bg-[#e5989b]/20 flex items-center justify-center shadow-inner shrink-0 cursor-pointer overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    transform: "translate3d(0, 0, 0)",
+                    isolation: "isolate"
+                  }}
+                >
+                  <span className="absolute inset-0 bg-white/10 opacity-0 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none" />
+                  <span className="material-symbols-outlined text-[#e5989b] text-7xl pointer-events-none">add_photo_alternate</span>
+                </button>
+
+                <h4 className="text-3xl font-black text-white uppercase tracking-tight leading-tight whitespace-nowrap lg:text-4xl">
+                  Share the Love
+                </h4>
+
+                <p className="text-lg font-bold text-white/40 uppercase tracking-[0.3em] leading-tight max-w-[440px]">
+                  <span className="block">Submit your best shots</span>
+                  <span className="block">of your furry friends.</span>
+                </p>
+
+                <button
+                  onClick={handleSubmitPhoto}
+                  className={`w-full font-black uppercase text-lg tracking-widest h-14 rounded-full transition-colors flex items-center justify-center px-10 whitespace-nowrap shadow-xl
+                    ${submitError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-[#a8d5ba] hover:text-white'}
+                  `}
+                  style={{
+                    transform: "translate3d(0, 0, 0)",
+                    isolation: "isolate",
+                    willChange: "background-color, color",
+                  }}
+                >
+                  Submit Your Pictures
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Vertical Separator */}
-          <div className="w-px h-[500px] bg-white/10 shrink-0" />
-
-          {/* Right: Submit */}
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="flex flex-col items-center justify-between h-[540px] w-full max-w-[420px] mx-auto border-2 border-red-500">
-              <div className="w-40 h-40 rounded-full bg-[#e5989b]/20 flex items-center justify-center shadow-inner shrink-0">
-                <span className="material-symbols-outlined text-[#e5989b] text-7xl">add_photo_alternate</span>
+          {/* Wall of Photos View: 4x2 Grid */}
+          <div
+            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-[600ms] delay-100 transform px-24 py-16
+              ${showGallery ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+            `}
+            style={{
+              isolation: "isolate",
+              transform: "translate3d(0,0,0)",
+              transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+            }}
+          >
+            <div className="w-full max-w-7xl h-full flex flex-col">
+              <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-8 lg:text-5xl text-center">Archive Gallery</h4>
+              <div className="grid grid-cols-4 grid-rows-2 gap-6 flex-1">
+                <div className="col-span-4 row-span-2 bg-white/5 rounded-[2.5rem] border border-white/10 flex items-center justify-center">
+                  <span className="text-white/30 text-3xl font-black uppercase tracking-[0.3em]">No photos yet</span>
+                </div>
               </div>
-              
-              <h4 className="text-3xl font-black text-white uppercase tracking-widest leading-tight whitespace-nowrap lg:text-4xl">
-                Share the Love
-              </h4>
-
-              <p className="text-lg font-bold text-white/40 uppercase tracking-[0.3em] leading-tight max-w-[440px]">
-                <span className="block">Submit your best shots</span>
-                <span className="block">of your furry friends.</span>
-              </p>
-
-              <button className="w-full bg-white text-black font-black uppercase text-lg tracking-widest h-14 rounded-full hover:bg-[#a8d5ba] hover:text-white transition-all flex items-center justify-center px-10 whitespace-nowrap shadow-xl">
-                Submit Your Pictures
-              </button>
             </div>
           </div>
         </div>
       );
     case 3: // Let's Grow Together
       return (
-        <div className="flex w-full h-full items-center justify-around">
-          {/* 50% Left: Community */}
-          <div className="w-full max-w-[600px] h-[350px] flex flex-col justify-between space-y-12 border-2 border-red-500">
-            <h4 className="text-4xl font-black text-white uppercase tracking-tighter mb-6 lg:text-5xl">The Pack</h4>
-            <div className="flex-1">
-              <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:border-white/40 transition-all cursor-pointer group shadow-xl h-full flex flex-col justify-start">
-                <div className="flex items-center justify-between mb-6">
-                  <h5 className="text-3xl font-black text-white uppercase tracking-tight lg:text-4xl">Become a Contributor</h5>
-                  <span
-                    className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors"
-                    style={{ fontSize: 96 }}
-                  >
-                    volunteer_activism
-                  </span>
+        <div className="relative w-full h-full overflow-hidden">
+          {/* Main Community & Collab View */}
+          <div 
+            className={`absolute inset-0 flex items-center justify-around transition-[opacity,transform] duration-[600ms]
+              ${(showCollabForm || showContributorForm) ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+            `}
+            style={{
+              transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+            }}
+          >
+            {/* 50% Left: Community */}
+            <div className="w-full max-w-[580px] h-[350px] flex flex-col justify-between space-y-12 border-2 border-transparent">
+              <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-6 lg:text-5xl">The Pack</h4>
+              <div className="flex-1">
+                <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:border-white/40 transition-all cursor-pointer group shadow-xl h-full flex flex-col justify-start">
+                  <div className="flex items-center justify-between mb-6">
+                    <h5 className="text-3xl font-black text-white uppercase tracking-tight lg:text-4xl">Become a Contributor</h5>
+                    <span
+                      className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors"
+                      style={{ fontSize: 96 }}
+                    >
+                      volunteer_activism
+                    </span>
+                  </div>
+                  <p className="text-base text-white/40 leading-relaxed font-medium lg:text-lg">
+                    PawMatch is built by the community.{" "}
+                    <button 
+                      onClick={() => setShowContributorForm(true)}
+                      className="text-[#a8d5ba] hover:text-white transition-colors underline decoration-1 underline-offset-4"
+                    >
+                      Help us
+                    </button>
+                    {" "}host better meetups, spread the word, or offer specialized skills.
+                  </p>
                 </div>
-                <p className="text-base text-white/40 leading-relaxed font-medium lg:text-lg">Help us organize and maintain our community spaces.</p>
+              </div>
+            </div>
+
+            {/* Vertical Separator */}
+            <div className="w-[2px] h-[350px] bg-white/50 shrink-0" />
+
+            {/* 50% Right: Collab */}
+            <div className="w-full max-w-[550px] h-[350px] flex flex-col justify-between space-y-12 border-2 border-transparent">
+              <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-6 lg:text-5xl">Strategic</h4>
+              <div className="flex-1">
+                <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:border-white/40 transition-all cursor-pointer group shadow-xl h-full flex flex-col justify-start">
+                  <div className="flex items-center justify-between mb-6">
+                    <h5 className="text-3xl font-black text-white uppercase tracking-tight lg:text-4xl">Partners &<br />Collaborations</h5>
+                    <span
+                      className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors"
+                      style={{ fontSize: 96 }}
+                    >
+                      handshake
+                    </span>
+                  </div>
+                  <p className="text-base text-white/40 leading-relaxed font-medium lg:text-lg">
+                    For brands, clubs, venues, and vet partners looking to support the club.{" "}
+                    <button 
+                      onClick={() => setShowCollabForm(true)}
+                      className="text-[#a8d5ba] hover:text-white transition-colors underline decoration-1 underline-offset-4"
+                    >
+                      Inquire Now
+                    </button>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Vertical Separator */}
-          <div className="w-[2px] h-[350px] bg-white/50 shrink-0" />
+          {/* Collaboration Form View */}
+          <div 
+            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-[600ms]
+              ${showCollabForm ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+            `}
+            style={{
+              transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+            }}
+          >
+            <div className="w-full max-w-4xl bg-white/5 p-12 rounded-[4rem] border border-white/10 shadow-2xl relative overflow-y-auto max-h-[90vh] hide-scrollbar">
+              <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-12 text-center lg:text-5xl">Let's Partner Up</h4>
 
-          {/* 50% Right: Collab */}
-          <div className="w-full max-w-[500px] h-[350px] flex flex-col justify-between space-y-12 border-2 border-red-500">
-            <h4 className="text-4xl font-black text-white uppercase tracking-tighter mb-6 lg:text-5xl">Strategic</h4>
-            <div className="bg-white/10 p-12 rounded-[3rem] border border-white/20 relative overflow-hidden group hover:bg-white/20 transition-all cursor-pointer h-full flex flex-col justify-between shadow-2xl">
-              <span className="material-symbols-outlined absolute -top-12 -right-12 text-[20rem] text-white/5 group-hover:scale-110 transition-transform">handshake</span>
-              <div className="relative z-10">
-                <h5 className="text-3xl font-black text-white uppercase mb-6 leading-[0.95] tracking-tighter lg:text-4xl">Partners &<br />Collaborations</h5>
-                <p className="text-base text-white/60 leading-relaxed mb-8 font-medium max-w-lg lg:text-lg">
-                  For brands, venues, and veterinary partners looking to support the local pet ecosystem.
-                </p>
-                <button className="text-sm font-black uppercase tracking-[0.4em] text-white/60 group-hover:text-white transition-colors flex items-center gap-4 border-b border-white/20 pb-2 lg:text-base">
-                  Inquire Now <span className="material-symbols-outlined text-2xl">north_east</span>
+              <div className="space-y-10">
+                {/* Type Selector */}
+                <div className="space-y-4 text-center">
+                  <label className="text-base uppercase tracking-[0.3em] font-bold text-white/40 block">Inquiry Type</label>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {["Fellow Club", "Vet", "Venue", "Brands", "Other"].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setCollabType(type)}
+                        className={`px-8 py-3 rounded-full text-lg font-black uppercase tracking-widest transition-all duration-300 border
+                          ${collabType === type 
+                            ? 'bg-white text-black border-white' 
+                            : 'bg-white/5 text-white/40 border-white/10 hover:bg-[#a8d5ba] hover:text-white hover:border-[#a8d5ba]'
+                          }
+                        `}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subject & Message */}
+                <div className="grid grid-cols-1 gap-8">
+                  <div className="space-y-4">
+                    <label className="text-base uppercase tracking-[0.3em] font-bold text-white/40 block ml-4">Subject</label>
+                    <input 
+                      type="text"
+                      value={collabSubject}
+                      onChange={(e) => setCollabSubject(e.target.value)}
+                      placeholder="e.g. Strategic Partnership Inquiry"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-2xl placeholder:text-white/20 placeholder:text-2xl focus:outline-none focus:border-[#a8d5ba] transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-base uppercase tracking-[0.3em] font-bold text-white/40 block ml-4">Message</label>
+                    <textarea 
+                      value={collabMessage}
+                      onChange={(e) => setCollabMessage(e.target.value)}
+                      placeholder="Tell us about your proposal..."
+                      rows={4}
+                      className="w-full bg-white/5 border border-white/10 rounded-[2rem] px-6 py-5 text-white text-2xl placeholder:text-white/20 placeholder:text-2xl focus:outline-none focus:border-[#a8d5ba] transition-colors resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <button 
+                  onClick={() => {
+                    const cleanSubject = collabSubject.trim();
+                    const cleanMessage = collabMessage.trim();
+
+                    if (!cleanSubject || !cleanMessage) {
+                      setCollabError(true);
+                      setTimeout(() => setCollabError(false), 400);
+                      return;
+                    }
+
+                    const subject = encodeURIComponent(`${collabType} Collaboration: ${cleanSubject}`);
+                    const body = encodeURIComponent(cleanMessage);
+                    window.location.href = `mailto:hello@pawmatch.in?subject=${subject}&body=${body}`;
+                  }}
+                  className={`w-full font-black uppercase tracking-widest py-5 rounded-full text-lg shadow-xl transition-all
+                    ${collabError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-[#a8d5ba] hover:text-white'}
+                  `}
+                >
+                  Send Inquiry
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Contributor Form View */}
+          <div 
+            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-[600ms]
+              ${showContributorForm ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+            `}
+            style={{
+              transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+            }}
+          >
+            <div className="w-full max-w-4xl bg-white/5 p-12 rounded-[4rem] border border-white/10 shadow-2xl relative overflow-y-auto max-h-[90vh] hide-scrollbar">
+              <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-12 text-center lg:text-5xl">Join the Mission</h4>
+
+              <div className="space-y-10">
+                {/* Type Selector */}
+                <div className="space-y-4 text-center">
+                  <label className="text-sm uppercase tracking-[0.3em] font-bold text-white/40 block">I can help with...</label>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {["Host Meetups", "Spread the Word", "Specialized Skills", "Other"].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setContributorType(type)}
+                        className={`px-8 py-3 rounded-full text-base font-black uppercase tracking-widest transition-all duration-300 border
+                          ${contributorType === type 
+                            ? 'bg-white text-black border-white' 
+                            : 'bg-white/5 text-white/40 border-white/10 hover:bg-[#a8d5ba] hover:text-white hover:border-[#a8d5ba]'
+                          }
+                        `}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subject & Message */}
+                <div className="grid grid-cols-1 gap-8">
+                  <div className="space-y-4">
+                    <label className="text-sm uppercase tracking-[0.3em] font-bold text-white/40 block ml-4">How you'd like to help</label>
+                    <input 
+                      type="text"
+                      value={contributorSubject}
+                      onChange={(e) => setContributorSubject(e.target.value)}
+                      placeholder="e.g. Host a monthly meetup in Pune"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-xl placeholder:text-white/20 focus:outline-none focus:border-[#a8d5ba] transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-sm uppercase tracking-[0.3em] font-bold text-white/40 block ml-4">Details</label>
+                    <textarea 
+                      value={contributorMessage}
+                      onChange={(e) => setContributorMessage(e.target.value)}
+                      placeholder="Share timing, city, audience size, and any relevant links."
+                      rows={4}
+                      className="w-full bg-white/5 border border-white/10 rounded-[2rem] px-6 py-5 text-white text-xl placeholder:text-white/20 focus:outline-none focus:border-[#a8d5ba] transition-colors resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <button 
+                  onClick={() => {
+                    const cleanSubject = contributorSubject.trim();
+                    const cleanMessage = contributorMessage.trim();
+
+                    if (!cleanSubject || !cleanMessage) {
+                      setContributorError(true);
+                      setTimeout(() => setContributorError(false), 400);
+                      return;
+                    }
+
+                    const subject = encodeURIComponent(`Contributor Inquiry (${contributorType}): ${cleanSubject}`);
+                    const body = encodeURIComponent(cleanMessage);
+                    window.location.href = `mailto:hello@pawmatch.in?subject=${subject}&body=${body}`;
+                  }}
+                  className={`w-full font-black uppercase tracking-widest py-5 rounded-full text-lg shadow-xl transition-all
+                    ${contributorError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-[#a8d5ba] hover:text-white'}
+                  `}
+                >
+                  Submit Proposal
                 </button>
               </div>
             </div>

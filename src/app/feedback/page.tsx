@@ -1,5 +1,6 @@
 "use client";
 
+import Navbar from "../../components/Navbar";
 import { useState } from "react";
 
 export default function FeedbackPage() {
@@ -7,8 +8,9 @@ export default function FeedbackPage() {
     const [message, setMessage] = useState("");
 
     return (
-        <main className="min-h-screen bg-black text-white px-6 py-16">
-            <div className="mx-auto w-full max-w-3xl">
+        <main className="min-h-screen bg-black text-white px-6 py-24">
+            <Navbar />
+            <div className="mx-auto w-full max-w-3xl mt-12">
                 <h1 className="text-4xl md:text-5xl font-black tracking-tight">Share your thoughts</h1>
                 <p className="text-white/60 mt-3">
                     Choose the type and drop your notes below.
