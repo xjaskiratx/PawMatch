@@ -31,7 +31,7 @@ export default function CinematicDogs({
       // Start 2 seconds after the diagonal sequence begins
       timer = setTimeout(() => setShow(true), 2000);
     } else {
-      setShow(false);
+      setTimeout(() => setShow(false), 0);
     }
     return () => clearTimeout(timer);
   }, [active]);

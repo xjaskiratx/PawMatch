@@ -13,7 +13,7 @@ export default function WaiverPage() {
                         By participating in PawMatch events, you agree to assume all risks associated with pet interactions. PawMatch and its organizers are not liable for any injuries, losses, or damages occurring during meetups.
                     </p>
                     <p>
-                        Owners are solely responsible for their pets' behavior and any consequences thereof. Ensure your pet is properly socialized and vaccinated before attending.
+                        Owners are solely responsible for their pets&apos; behavior and any consequences thereof. Ensure your pet is properly socialized and vaccinated before attending.
                     </p>
                     <div className="pt-6 border-t border-white/10">
                         <p className="text-xs font-bold uppercase tracking-widest text-[#a8d5ba]">

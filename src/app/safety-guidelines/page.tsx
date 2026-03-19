@@ -1,8 +1,19 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import LiquidFooter from "../../components/LiquidFooter";
 import Link from "next/link";
 
 export default function SafetyGuidelines() {
+    const [scrollY, setScrollY] = useState(0);
+
+    useEffect(() => {
+        const handleScroll = () => setScrollY(window.scrollY);
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
     return (
         <>
             <Navbar />
@@ -106,7 +117,8 @@ export default function SafetyGuidelines() {
                 </div>
             </main>
 
-            <Footer />
+            <LiquidFooter scrollY={scrollY} visible={true} />
         </>
     );
 }
+

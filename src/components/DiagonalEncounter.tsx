@@ -64,15 +64,17 @@ export default function DiagonalEncounter({
     const frameRef = useRef<number>(0);
 
     useEffect(() => {
-        setMounted(true);
+        setTimeout(() => setMounted(true), 0);
     }, []);
 
     useEffect(() => {
         if (!active) {
             // Reset when not active
             startTimeRef.current = null;
-            setProgress(0);
-            setBobbing(false);
+            setTimeout(() => {
+                setProgress(0);
+                setBobbing(false);
+            }, 0);
             return;
         }
 

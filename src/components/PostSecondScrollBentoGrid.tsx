@@ -44,24 +44,26 @@ export default function PostSecondScrollBentoGrid({
 
   useEffect(() => {
     if (!visible) {
-      setActiveCol(null);
-      setShowCanvas(false);
-      setEmail("");
-      setEmailError(false);
-      setSelectedEvent(null);
-      setShowGallery(false);
-      setSelectedFile(null);
-      setSubmitError(false);
-      setShowCollabForm(false);
-      setShowContributorForm(false);
-      setCollabType("Brands");
-      setCollabSubject("");
-      setCollabMessage("");
-      setCollabError(false);
-      setContributorType("General Help");
-      setContributorSubject("");
-      setContributorMessage("");
-      setContributorError(false);
+      setTimeout(() => {
+        setActiveCol(null);
+        setShowCanvas(false);
+        setEmail("");
+        setEmailError(false);
+        setSelectedEvent(null);
+        setShowGallery(false);
+        setSelectedFile(null);
+        setSubmitError(false);
+        setShowCollabForm(false);
+        setShowContributorForm(false);
+        setCollabType("Brands");
+        setCollabSubject("");
+        setCollabMessage("");
+        setCollabError(false);
+        setContributorType("General Help");
+        setContributorSubject("");
+        setContributorMessage("");
+        setContributorError(false);
+      }, 0);
     }
   }, [visible]);
 
@@ -71,7 +73,7 @@ export default function PostSecondScrollBentoGrid({
       const timer = setTimeout(() => setShowCanvas(true), 200);
       return () => clearTimeout(timer);
     } else {
-      setShowCanvas(false);
+      setTimeout(() => setShowCanvas(false), 0);
     }
   }, [activeCol]);
 
@@ -127,7 +129,7 @@ export default function PostSecondScrollBentoGrid({
 
   return (
     <div
-      className="fixed inset-0 pointer-events-none z-[160]"
+      className="fixed inset-0 pointer-events-none z-160"
       style={{
         opacity,
         transition: "opacity 600ms cubic-bezier(0.16, 1, 0.3, 1)",
@@ -179,6 +181,7 @@ export default function PostSecondScrollBentoGrid({
                   onMouseEnter={() => !isDetailActive && setHoveredIndex(idx)}
                   onClick={() => setActiveCol(idx)}
                   className={`relative flex flex-col items-center justify-center cursor-pointer
+                    bg-white/10 backdrop-blur-3xl border border-white/20 rounded-[40px] isolate transform-gpu
                     ${isDetailActive ? 'opacity-0 pointer-events-none' : 'opacity-100 scale-100'}
                   `}
                   style={{
@@ -191,16 +194,9 @@ export default function PostSecondScrollBentoGrid({
                       ? "flex 600ms cubic-bezier(0.16, 1, 0.3, 1), opacity 600ms cubic-bezier(0.16, 1, 0.3, 1), transform 600ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 600ms cubic-bezier(0.16, 1, 0.3, 1)"
                       : "flex 1000ms cubic-bezier(0.3, 1, 0.4, 1), opacity 800ms cubic-bezier(0.16, 1, 0.3, 1), transform 800ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 800ms cubic-bezier(0.16, 1, 0.3, 1)",
                     willChange: "flex, transform, opacity, box-shadow",
-                    background: "rgba(255, 255, 255, 0.08)",
-                    backdropFilter: "blur(24px) saturate(120%)",
-                    WebkitBackdropFilter: "blur(24px) saturate(120%)",
-                    border: "1px solid rgba(255, 255, 255, 0.15)",
-                    borderRadius: "40px",
                     boxShadow: isHovered ? "0 20px 40px rgba(0,0,0,0.3)" : "0 10px 20px rgba(0,0,0,0.1)",
-                    transform: "translateZ(0)",
                     backfaceVisibility: "hidden",
                     WebkitBackfaceVisibility: "hidden",
-                    isolation: "isolate",
                   }}
                 >
                   <div
@@ -227,7 +223,8 @@ export default function PostSecondScrollBentoGrid({
 
           {/* Detail Canvas */}
           <div
-            className={`absolute inset-0 flex flex-col items-center justify-center p-12 pointer-events-auto transition-[opacity,transform] duration-[600ms]
+            className={`absolute inset-0 flex flex-col items-center justify-center p-12 pointer-events-auto transition-[opacity,transform] duration-600
+              bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[40px] isolate transform-gpu
               ${showCanvas ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-0 pointer-events-none'}
             `}
             style={{
@@ -236,14 +233,7 @@ export default function PostSecondScrollBentoGrid({
               // Used for back button alignment across the canvas
               "--back-offset": "24px",
               "--back-size": "56px",
-              background: "rgba(255, 255, 255, 0.03)",
-              backdropFilter: "blur(40px) saturate(150%)",
-              WebkitBackdropFilter: "blur(40px) saturate(150%)",
-              isolation: "isolate",
-              transform: "translate3d(0, 0, 0)",
-              borderRadius: "40px",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-            } as any}
+            } as React.CSSProperties}
           >
             {activeCol !== null && (
               <>
@@ -282,40 +272,41 @@ export default function PostSecondScrollBentoGrid({
                     animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
                   }
                 `}</style>
-                {getPillarContent(
-                  activeCol,
-                  email,
-                  setEmail,
-                  emailError,
-                  handleNewsletterSubmit,
-                  selectedEvent,
-                  setSelectedEvent,
-                  fileInputRef,
-                  showGallery,
-                  setShowGallery,
-                  submitError,
-                  handleSubmitPhoto,
-                  showCollabForm,
-                  setShowCollabForm,
-                  collabType,
-                  setCollabType,
-                  collabSubject,
-                  setCollabSubject,
-                  collabMessage,
-                  setCollabMessage,
-                  collabError,
-                  setCollabError,
-                  showContributorForm,
-                  setShowContributorForm,
-                  contributorType,
-                  setContributorType,
-                  contributorSubject,
-                  setContributorSubject,
-                  contributorMessage,
-                  setContributorMessage,
-                  contributorError,
-                  setContributorError
-                )}
+                {/* Passing props correctly as a component to avoid ref access during render issues */}
+                <PillarContent
+                  idx={activeCol}
+                  email={email}
+                  setEmail={setEmail}
+                  emailError={emailError}
+                  handleNewsletterSubmit={handleNewsletterSubmit}
+                  selectedEvent={selectedEvent}
+                  setSelectedEvent={setSelectedEvent}
+                  fileInputRef={fileInputRef}
+                  showGallery={showGallery}
+                  setShowGallery={setShowGallery}
+                  submitError={submitError}
+                  handleSubmitPhoto={handleSubmitPhoto}
+                  showCollabForm={showCollabForm}
+                  setShowCollabForm={setShowCollabForm}
+                  collabType={collabType}
+                  setCollabType={setCollabType}
+                  collabSubject={collabSubject}
+                  setCollabSubject={setCollabSubject}
+                  collabMessage={collabMessage}
+                  setCollabMessage={setCollabMessage}
+                  collabError={collabError}
+                  setCollabError={setCollabError}
+                  showContributorForm={showContributorForm}
+                  setShowContributorForm={setShowContributorForm}
+                  contributorType={contributorType}
+                  setContributorType={setContributorType}
+                  contributorSubject={contributorSubject}
+                  setContributorSubject={setContributorSubject}
+                  contributorMessage={contributorMessage}
+                  setContributorMessage={setContributorMessage}
+                  contributorError={contributorError}
+                  setContributorError={setContributorError}
+                />
               </>
             )}
           </div>
@@ -332,40 +323,74 @@ export default function PostSecondScrollBentoGrid({
   );
 }
 
-function getPillarContent(
-  idx: number,
-  email: string,
-  setEmail: (val: string) => void,
-  emailError: boolean,
-  handleNewsletterSubmit: () => void,
-  selectedEvent: { title: string; date: string; location: string } | null,
-  setSelectedEvent: (ev: { title: string; date: string; location: string } | null) => void,
-  fileInputRef: React.RefObject<HTMLInputElement | null>,
-  showGallery: boolean,
-  setShowGallery: (val: boolean) => void,
-  submitError: boolean,
-  handleSubmitPhoto: () => void,
-  showCollabForm: boolean,
-  setShowCollabForm: (val: boolean) => void,
-  collabType: string,
-  setCollabType: (val: string) => void,
-  collabSubject: string,
-  setCollabSubject: (val: string) => void,
-  collabMessage: string,
-  setCollabMessage: (val: string) => void,
-  collabError: boolean,
-  setCollabError: (val: boolean) => void,
-  showContributorForm: boolean,
-  setShowContributorForm: (val: boolean) => void,
-  contributorType: string,
-  setContributorType: (val: string) => void,
-  contributorSubject: string,
-  setContributorSubject: (val: string) => void,
-  contributorMessage: string,
-  setContributorMessage: (val: string) => void,
-  contributorError: boolean,
-  setContributorError: (val: boolean) => void
-) {
+interface PillarContentProps {
+  idx: number | null;
+  email: string;
+  setEmail: (val: string) => void;
+  emailError: boolean;
+  handleNewsletterSubmit: () => void;
+  selectedEvent: { title: string; date: string; location: string } | null;
+  setSelectedEvent: (ev: { title: string; date: string; location: string } | null) => void;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  showGallery: boolean;
+  setShowGallery: (val: boolean) => void;
+  submitError: boolean;
+  handleSubmitPhoto: () => void;
+  showCollabForm: boolean;
+  setShowCollabForm: (val: boolean) => void;
+  collabType: string;
+  setCollabType: (val: string) => void;
+  collabSubject: string;
+  setCollabSubject: (val: string) => void;
+  collabMessage: string;
+  setCollabMessage: (val: string) => void;
+  collabError: boolean;
+  setCollabError: (val: boolean) => void;
+  showContributorForm: boolean;
+  setShowContributorForm: (val: boolean) => void;
+  contributorType: string;
+  setContributorType: (val: string) => void;
+  contributorSubject: string;
+  setContributorSubject: (val: string) => void;
+  contributorMessage: string;
+  setContributorMessage: (val: string) => void;
+  contributorError: boolean;
+  setContributorError: (val: boolean) => void;
+}
+
+function PillarContent({
+  idx,
+  email,
+  setEmail,
+  emailError,
+  handleNewsletterSubmit,
+  selectedEvent,
+  setSelectedEvent,
+  fileInputRef,
+  showGallery,
+  submitError,
+  handleSubmitPhoto,
+  showCollabForm,
+  setShowCollabForm,
+  collabType,
+  setCollabType,
+  collabSubject,
+  setCollabSubject,
+  collabMessage,
+  setCollabMessage,
+  collabError,
+  setCollabError,
+  showContributorForm,
+  setShowContributorForm,
+  contributorType,
+  setContributorType,
+  contributorSubject,
+  setContributorSubject,
+  contributorMessage,
+  setContributorMessage,
+  contributorError,
+  setContributorError
+}: PillarContentProps) {
   switch (idx) {
     case 0: // About the Founder
       return (
@@ -376,7 +401,7 @@ function getPillarContent(
             </div>
           </div>
           <p className="text-3xl font-medium text-white/90 leading-[1.3] text-balance italic px-12 lg:text-4xl">
-            "PawMatch started as a simple idea: that our pets shouldn't just be our best friends, they should be the bridge that connects us all."
+            &quot;PawMatch started as a simple idea: that our pets shouldn&apos;t just be our best friends, they should be the bridge that connects us all.&quot;
           </p>
           <div className="flex flex-col items-center gap-6">
             <span className="text-base font-black uppercase tracking-[0.6em] text-white/40">Founder & Pack Leader</span>
@@ -389,13 +414,13 @@ function getPillarContent(
         <div className="relative w-full h-full overflow-hidden">
           {/* List View: Events + Newsletter */}
           <div
-            className={`absolute inset-0 flex items-center justify-around transition-[opacity,transform] duration-[600ms] px-8
+            className={`absolute inset-0 flex items-center justify-around transition-[opacity,transform] duration-600 px-8
               ${selectedEvent ? 'opacity-0 pointer-events-none' : 'opacity-100'}
             `}
             style={{ transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
           >
             {/* 70% Left: Events */}
-            <div className="h-[350px] flex flex-col justify-between space-y-10 border-2 border-transparent">
+            <div className="h-87.5 flex flex-col justify-between space-y-10 border-2 border-transparent">
               <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-10 lg:text-5xl">Next Meetups</h4>
               <div className="grid grid-cols-2 gap-8">
                 {[
@@ -405,13 +430,11 @@ function getPillarContent(
                   <div
                     key={i}
                     onClick={() => setSelectedEvent(ev)}
-                    className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:bg-white/10 transition-colors group cursor-pointer"
+                    className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:bg-white/10 transition-colors group cursor-pointer shadow-md isolate transform-gpu"
                     style={{
-                      transform: "translate3d(0, 0, 0)",
+                      willChange: "background-color, border-color",
                       backfaceVisibility: "hidden",
                       WebkitBackfaceVisibility: "hidden",
-                      isolation: "isolate",
-                      willChange: "background-color, border-color",
                     }}
                   >
                     <div className="flex justify-between items-start mb-6 pointer-events-none">
@@ -420,7 +443,7 @@ function getPillarContent(
                     </div>
                     <div className="pointer-events-none">
                       <h5 className="text-2xl font-black text-white uppercase tracking-tight mb-2 lg:text-3xl">{ev.title}</h5>
-                      <p className="text-base text-white/40 uppercase tracking-[0.1em] font-bold lg:text-lg">{ev.location}</p>
+                      <p className="text-base text-white/40 uppercase tracking-widest font-bold lg:text-lg">{ev.location}</p>
                     </div>
                   </div>
                 ))}
@@ -428,10 +451,10 @@ function getPillarContent(
             </div>
 
             {/* Vertical Separator */}
-            <div className="w-px h-[350px] bg-white/10 mx-4" />
+            <div className="w-px h-87.5 bg-white/10 mx-4" />
 
             {/* 30% Right: Newsletter */}
-            <div className="h-[350px] flex flex-col justify-between space-y-12 pr-6 border-2 border-transparent">
+            <div className="h-87.5 flex flex-col justify-between space-y-12 pr-6 border-2 border-transparent">
               <div className="space-y-3">
                 <span className="text-lg font-black uppercase tracking-[0.4em] text-white/50">Weekly Paws</span>
                 <h4 className="text-3xl font-black text-white uppercase leading-none tracking-tight whitespace-nowrap lg:text-4xl">Stay in the Loop</h4>
@@ -453,7 +476,7 @@ function getPillarContent(
                 </div>
                 <button
                   onClick={handleNewsletterSubmit}
-                  className="w-full bg-white text-black font-black uppercase text-base tracking-[0.2em] py-3 rounded-full hover:bg-[#a8d5ba] hover:text-white transition-all shadow-xl flex items-center justify-center mt-4"
+                  className="w-full bg-white text-black font-black uppercase text-base tracking-[0.2em] py-3 rounded-full hover:bg-primary hover:text-white transition-all shadow-xl flex items-center justify-center mt-4"
                 >
                   Join the Club
                 </button>
@@ -464,7 +487,7 @@ function getPillarContent(
 
           {/* Details View: Event Details */}
           <div
-            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-[600ms] delay-100
+            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-600 delay-100
               ${selectedEvent ? 'opacity-100' : 'opacity-0 pointer-events-none'}
             `}
             style={{ transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
@@ -488,7 +511,7 @@ function getPillarContent(
                       href="https://ig.me/m/pawmatch.in"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-2xl font-black text-[#a8d5ba] uppercase tracking-widest leading-relaxed hover:text-white transition-colors lg:text-3xl underline decoration-2 underline-offset-8"
+                      className="text-2xl font-black text-primary uppercase tracking-widest leading-relaxed hover:text-white transition-colors lg:text-3xl underline decoration-2 underline-offset-8"
                     >
                       DM to register for the event.
                     </a>
@@ -507,7 +530,7 @@ function getPillarContent(
         <div className="relative w-full h-full overflow-hidden">
           {/* Main Paw Booth View */}
           <div
-            className={`absolute inset-0 flex items-center justify-center transition-[opacity,transform] duration-[600ms]
+            className={`absolute inset-0 flex items-center justify-center transition-[opacity,transform] duration-600
               ${showGallery ? 'opacity-0 pointer-events-none' : 'opacity-100'}
             `}
             style={{
@@ -519,25 +542,25 @@ function getPillarContent(
           >
             {/* Left: Gallery Archive */}
             <div className="flex flex-col items-center justify-center">
-              <div className="flex flex-col items-center justify-between h-[540px] w-full max-w-[760px] mx-auto border-2 border-transparent">
+              <div className="flex flex-col items-center justify-between h-135 w-full max-w-190 mx-auto border-2 border-transparent">
                 <h4 className="text-4xl font-black text-white uppercase tracking-tight text-center lg:text-5xl">PawBooth Archive</h4>
                 <div className="grid grid-cols-3 gap-8 h-80 w-full px-4">
                   <div className="col-span-3 bg-white/5 rounded-[2.5rem] border border-white/10 flex items-center justify-center">
                     <span className="text-white/30 text-2xl font-black uppercase tracking-[0.3em]">No photos yet</span>
                   </div>
                 </div>
-                <p className="text-xl text-white/50 leading-relaxed max-w-[800px] text-center lg:text-2xl">
+                <p className="text-xl text-white/50 leading-relaxed max-w-200 text-center lg:text-2xl">
                   Highlights or memories of our journey so far. Thousands of high-res tails from every PawMatch session since 2023.
                 </p>
               </div>
             </div>
 
             {/* Vertical Separator */}
-            <div className="w-px h-[500px] bg-white/10 shrink-0 mx-4" />
+            <div className="w-px h-125 bg-white/10 shrink-0 mx-4" />
 
             {/* Right: Submit */}
             <div className="flex flex-col items-center justify-center text-center">
-              <div className="flex flex-col items-center justify-between h-[540px] w-full max-w-[420px] mx-auto border-2 border-transparent">
+              <div className="flex flex-col items-center justify-between h-135 w-full max-w-105 mx-auto border-2 border-transparent">
                 <button
                   type="button"
                   className="group relative w-40 h-40 rounded-full bg-[#e5989b]/20 flex items-center justify-center shadow-inner shrink-0 cursor-pointer overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
@@ -555,7 +578,7 @@ function getPillarContent(
                   Share the Love
                 </h4>
 
-                <p className="text-lg font-bold text-white/40 uppercase tracking-[0.3em] leading-tight max-w-[440px]">
+                <p className="text-lg font-bold text-white/40 uppercase tracking-[0.3em] leading-tight max-w-110">
                   <span className="block">Submit your best shots</span>
                   <span className="block">of your furry friends.</span>
                 </p>
@@ -563,7 +586,7 @@ function getPillarContent(
                 <button
                   onClick={handleSubmitPhoto}
                   className={`w-full font-black uppercase text-lg tracking-widest h-14 rounded-full transition-colors flex items-center justify-center px-10 whitespace-nowrap shadow-xl
-                    ${submitError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-[#a8d5ba] hover:text-white'}
+                    ${submitError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-primary hover:text-white'}
                   `}
                   style={{
                     transform: "translate3d(0, 0, 0)",
@@ -579,12 +602,10 @@ function getPillarContent(
 
           {/* Wall of Photos View: 4x2 Grid */}
           <div
-            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-[600ms] delay-100 transform px-24 py-16
+            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-600 delay-100 transform px-24 py-16 isolate transform-gpu
               ${showGallery ? 'opacity-100' : 'opacity-0 pointer-events-none'}
             `}
             style={{
-              isolation: "isolate",
-              transform: "translate3d(0,0,0)",
               transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
             }}
           >
@@ -604,7 +625,7 @@ function getPillarContent(
         <div className="relative w-full h-full overflow-hidden">
           {/* Main Community & Collab View */}
           <div 
-            className={`absolute inset-0 flex items-center justify-around transition-[opacity,transform] duration-[600ms]
+            className={`absolute inset-0 flex items-center justify-around transition-[opacity,transform] duration-600
               ${(showCollabForm || showContributorForm) ? 'opacity-0 pointer-events-none' : 'opacity-100'}
             `}
             style={{
@@ -612,15 +633,14 @@ function getPillarContent(
             }}
           >
             {/* 50% Left: Community */}
-            <div className="w-full max-w-[580px] h-[350px] flex flex-col justify-between space-y-12 border-2 border-transparent">
+            <div className="w-full max-w-145 h-87.5 flex flex-col justify-between space-y-12 border-2 border-transparent">
               <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-6 lg:text-5xl">The Pack</h4>
               <div className="flex-1">
                 <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:border-white/40 transition-all cursor-pointer group shadow-xl h-full flex flex-col justify-start">
                   <div className="flex items-center justify-between mb-6">
                     <h5 className="text-3xl font-black text-white uppercase tracking-tight lg:text-4xl">Become a Contributor</h5>
                     <span
-                      className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors"
-                      style={{ fontSize: 96 }}
+                      className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors text-8xl lg:text-9xl"
                     >
                       volunteer_activism
                     </span>
@@ -629,7 +649,7 @@ function getPillarContent(
                     PawMatch is built by the community.{" "}
                     <button 
                       onClick={() => setShowContributorForm(true)}
-                      className="text-[#a8d5ba] hover:text-white transition-colors underline decoration-1 underline-offset-4"
+                      className="text-primary hover:text-white transition-colors underline decoration-1 underline-offset-4"
                     >
                       Help us
                     </button>
@@ -640,18 +660,17 @@ function getPillarContent(
             </div>
 
             {/* Vertical Separator */}
-            <div className="w-[2px] h-[350px] bg-white/50 shrink-0" />
+            <div className="w-0.5 h-87.5 bg-white/50 shrink-0" />
 
             {/* 50% Right: Collab */}
-            <div className="w-full max-w-[550px] h-[350px] flex flex-col justify-between space-y-12 border-2 border-transparent">
+            <div className="w-full max-w-137.5 h-87.5 flex flex-col justify-between space-y-12 border-2 border-transparent">
               <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-6 lg:text-5xl">Strategic</h4>
               <div className="flex-1">
                 <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:border-white/40 transition-all cursor-pointer group shadow-xl h-full flex flex-col justify-start">
                   <div className="flex items-center justify-between mb-6">
                     <h5 className="text-3xl font-black text-white uppercase tracking-tight lg:text-4xl">Partners &<br />Collaborations</h5>
                     <span
-                      className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors"
-                      style={{ fontSize: 96 }}
+                      className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors text-8xl lg:text-9xl"
                     >
                       handshake
                     </span>
@@ -660,7 +679,7 @@ function getPillarContent(
                     For brands, clubs, venues, and vet partners looking to support the club.{" "}
                     <button 
                       onClick={() => setShowCollabForm(true)}
-                      className="text-[#a8d5ba] hover:text-white transition-colors underline decoration-1 underline-offset-4"
+                      className="text-primary hover:text-white transition-colors underline decoration-1 underline-offset-4"
                     >
                       Inquire Now
                     </button>
@@ -672,7 +691,7 @@ function getPillarContent(
 
           {/* Collaboration Form View */}
           <div 
-            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-[600ms]
+            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-600
               ${showCollabForm ? 'opacity-100' : 'opacity-0 pointer-events-none'}
             `}
             style={{
@@ -680,7 +699,7 @@ function getPillarContent(
             }}
           >
             <div className="w-full max-w-4xl bg-white/5 p-12 rounded-[4rem] border border-white/10 shadow-2xl relative overflow-y-auto max-h-[90vh] hide-scrollbar">
-              <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-12 text-center lg:text-5xl">Let's Partner Up</h4>
+              <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-12 text-center lg:text-5xl">Let&apos;s Partner Up</h4>
 
               <div className="space-y-10">
                 {/* Type Selector */}
@@ -694,7 +713,7 @@ function getPillarContent(
                         className={`px-8 py-3 rounded-full text-lg font-black uppercase tracking-widest transition-all duration-300 border
                           ${collabType === type 
                             ? 'bg-white text-black border-white' 
-                            : 'bg-white/5 text-white/40 border-white/10 hover:bg-[#a8d5ba] hover:text-white hover:border-[#a8d5ba]'
+                            : 'bg-white/5 text-white/40 border-white/10 hover:bg-primary hover:text-white hover:border-primary'
                           }
                         `}
                       >
@@ -713,7 +732,7 @@ function getPillarContent(
                       value={collabSubject}
                       onChange={(e) => setCollabSubject(e.target.value)}
                       placeholder="e.g. Strategic Partnership Inquiry"
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-2xl placeholder:text-white/20 placeholder:text-2xl focus:outline-none focus:border-[#a8d5ba] transition-colors"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-2xl placeholder:text-white/20 placeholder:text-2xl focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                   <div className="space-y-4">
@@ -723,7 +742,7 @@ function getPillarContent(
                       onChange={(e) => setCollabMessage(e.target.value)}
                       placeholder="Tell us about your proposal..."
                       rows={4}
-                      className="w-full bg-white/5 border border-white/10 rounded-[2rem] px-6 py-5 text-white text-2xl placeholder:text-white/20 placeholder:text-2xl focus:outline-none focus:border-[#a8d5ba] transition-colors resize-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-4xl px-6 py-5 text-white text-2xl placeholder:text-white/20 placeholder:text-2xl focus:outline-none focus:border-primary transition-colors resize-none"
                     />
                   </div>
                 </div>
@@ -745,7 +764,7 @@ function getPillarContent(
                     window.location.href = `mailto:hello@pawmatch.in?subject=${subject}&body=${body}`;
                   }}
                   className={`w-full font-black uppercase tracking-widest py-5 rounded-full text-lg shadow-xl transition-all
-                    ${collabError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-[#a8d5ba] hover:text-white'}
+                    ${collabError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-primary hover:text-white'}
                   `}
                 >
                   Send Inquiry
@@ -756,14 +775,14 @@ function getPillarContent(
 
           {/* Contributor Form View */}
           <div 
-            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-[600ms]
+            className={`absolute inset-0 flex flex-col items-center justify-center transition-[opacity,transform] duration-600
               ${showContributorForm ? 'opacity-100' : 'opacity-0 pointer-events-none'}
             `}
             style={{
               transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
             }}
           >
-            <div className="w-full max-w-4xl bg-white/5 p-12 rounded-[4rem] border border-white/10 shadow-2xl relative overflow-y-auto max-h-[90vh] hide-scrollbar">
+            <div className="w-full max-w-4xl bg-white/5 backdrop-blur-3xl p-12 rounded-[4rem] border border-white/10 shadow-2xl relative overflow-y-auto max-h-[90vh] hide-scrollbar isolate transform-gpu">
               <h4 className="text-4xl font-black text-white uppercase tracking-tight mb-12 text-center lg:text-5xl">Join the Mission</h4>
 
               <div className="space-y-10">
@@ -778,7 +797,7 @@ function getPillarContent(
                         className={`px-8 py-3 rounded-full text-base font-black uppercase tracking-widest transition-all duration-300 border
                           ${contributorType === type 
                             ? 'bg-white text-black border-white' 
-                            : 'bg-white/5 text-white/40 border-white/10 hover:bg-[#a8d5ba] hover:text-white hover:border-[#a8d5ba]'
+                            : 'bg-white/5 text-white/40 border-white/10 hover:bg-primary hover:text-white hover:border-primary'
                           }
                         `}
                       >
@@ -791,13 +810,13 @@ function getPillarContent(
                 {/* Subject & Message */}
                 <div className="grid grid-cols-1 gap-8">
                   <div className="space-y-4">
-                    <label className="text-sm uppercase tracking-[0.3em] font-bold text-white/40 block ml-4">How you'd like to help</label>
+                    <label className="text-sm uppercase tracking-[0.3em] font-bold text-white/40 block ml-4">How you&apos;d like to help</label>
                     <input 
                       type="text"
                       value={contributorSubject}
                       onChange={(e) => setContributorSubject(e.target.value)}
                       placeholder="e.g. Host a monthly meetup in Pune"
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-xl placeholder:text-white/20 focus:outline-none focus:border-[#a8d5ba] transition-colors"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-xl placeholder:text-white/20 focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                   <div className="space-y-4">
@@ -807,7 +826,7 @@ function getPillarContent(
                       onChange={(e) => setContributorMessage(e.target.value)}
                       placeholder="Share timing, city, audience size, and any relevant links."
                       rows={4}
-                      className="w-full bg-white/5 border border-white/10 rounded-[2rem] px-6 py-5 text-white text-xl placeholder:text-white/20 focus:outline-none focus:border-[#a8d5ba] transition-colors resize-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-4xl px-6 py-5 text-white text-xl placeholder:text-white/20 focus:outline-none focus:border-primary transition-colors resize-none"
                     />
                   </div>
                 </div>
@@ -829,7 +848,7 @@ function getPillarContent(
                     window.location.href = `mailto:hello@pawmatch.in?subject=${subject}&body=${body}`;
                   }}
                   className={`w-full font-black uppercase tracking-widest py-5 rounded-full text-lg shadow-xl transition-all
-                    ${contributorError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-[#a8d5ba] hover:text-white'}
+                    ${contributorError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-primary hover:text-white'}
                   `}
                 >
                   Submit Proposal
@@ -843,3 +862,4 @@ function getPillarContent(
       return null;
   }
 }
+

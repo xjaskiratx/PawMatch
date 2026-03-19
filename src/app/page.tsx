@@ -234,7 +234,6 @@ function SeamlessLoop({ onLoopComplete }: { onLoopComplete: () => void }) {
     const duration = video.duration || 1;
 
     // Disable loop updates if we've clicked (to prevent text reset mid-transition)
-    // Disable loop updates if we've clicked (to prevent text reset mid-transition)
     if (duration > 1.5 && duration - current <= 1.5) {
       if (activeVid === 1 && vid2Ref.current && vid2Ref.current.paused) {
         setActiveVid(2);
@@ -293,7 +292,6 @@ export default function Home() {
   const [activeWordIndex, setActiveWordIndex] = useState(0);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [startBobbing, setStartBobbing] = useState(false);
-  const [showFinalPetGrid, setShowFinalPetGrid] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [navFadePhase, setNavFadePhase] = useState<"idle" | "out" | "in">("idle");
 
@@ -397,7 +395,7 @@ export default function Home() {
 
   useEffect(() => {
     if (isClicked) {
-      setShowExpansion(true);
+      setTimeout(() => setShowExpansion(true), 0);
       const tanTimer = setTimeout(() => setShowTan(true), 1000);
 
       // Start Navbar animation at 1120ms to finish at 1720ms (600ms duration)
@@ -763,8 +761,8 @@ export default function Home() {
                 animation: `rippleExpand 2.4s cubic-bezier(0.7, 0, 0.3, 1) ${ripple.delay}ms forwards`,
                 willChange: 'transform, background-color, opacity',
                 transformOrigin: 'center',
-                ['--ripple-start-color' as any]: ripple.color,
-              }}
+                ['--ripple-start-color' as string]: ripple.color,
+              } as React.CSSProperties}
             />
           ))}
         </div>

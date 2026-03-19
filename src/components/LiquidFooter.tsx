@@ -20,8 +20,8 @@ export default function LiquidFooter({ scrollY, visible }: { scrollY: number, vi
 
         const delta = Math.abs(scrollY - startScrollYRef.current);
         // Sensitive 30px threshold for cinematic collapse
-        if (delta > 30) {
-            setIsExpanded(false);
+        if (isExpanded && delta > 30) {
+            setTimeout(() => setIsExpanded(false), 0);
         }
     }, [isExpanded, scrollY]);
 
@@ -82,7 +82,7 @@ export default function LiquidFooter({ scrollY, visible }: { scrollY: number, vi
                                 <span className="text-2xl font-black tracking-tight text-white drop-shadow-sm">PawMatch</span>
                             </div>
                             <p className="text-white/40 text-[13px] leading-relaxed font-semibold max-w-[200px]">
-                                Ludhiana's favorite casual meetup club for pet owners and enthusiasts.
+                                Ludhiana&apos;s favorite casual meetup club for pet owners and enthusiasts.
                             </p>
                         </div>
 
