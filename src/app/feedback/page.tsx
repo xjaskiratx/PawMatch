@@ -43,6 +43,14 @@ export default function FeedbackPage() {
 
                     <button
                         type="button"
+                        onClick={() => {
+                            if (!message.trim()) {
+                                alert("Please enter a message!");
+                                return;
+                            }
+                            alert("Thank you for your feedback! We've received your notes.");
+                            setMessage("");
+                        }}
                         className="inline-flex items-center gap-2 rounded-full bg-white text-black px-8 py-3 text-sm font-black uppercase tracking-[0.2em] hover:bg-[#a8d5ba] hover:text-white transition-all"
                     >
                         Send

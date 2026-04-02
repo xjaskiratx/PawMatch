@@ -18,6 +18,17 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icon.png",
   },
+  openGraph: {
+    title: "PawMatch - Meet Local Pet Lovers",
+    description: "Ludhiana's favorite casual meetup club for pet owners and enthusiasts.",
+    images: ["/PetGrid.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PawMatch - Meet Local Pet Lovers",
+    description: "Ludhiana's favorite casual meetup club for pet owners and enthusiasts.",
+    images: ["/PetGrid.jpg"],
+  },
 };
 
 export default function RootLayout({
