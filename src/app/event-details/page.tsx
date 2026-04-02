@@ -3,6 +3,7 @@
 import Navbar from "../../components/Navbar";
 import MobileBottomNav from "../../components/MobileBottomNav";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function EventDetails() {
     return (
@@ -112,21 +113,27 @@ export default function EventDetails() {
                         <div className="bg-primary/10 px-5 py-4 mt-8 flex items-center justify-between rounded-xl">
                             <div className="flex -space-x-2">
                                 <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-300 overflow-hidden">
-                                    <img
-                                        data-alt="User profile avatar 1"
+                                    <Image
+                                        alt="User profile avatar 1"
                                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtCe3CwV3_YubWSyWjnClJi4zPEFD1hkS-tO809UQw_D9qvUCN0KI0hiI-tuUAvUoz8c7-O0gJAl19WnbCZfwUmoxGcuJ_0i-7AZcE6B89fCCRIEzELy3aPj9tATMIiShzPVPMsrXE2iZy_bC3cudsYflgJnNcAzYEog9E57ZkdQ7OcjoIkZ_kBm8V4GMIbpdKc-0aVdSw0ttKYj9zSIL6z5jO533WllZqaxYeDBFA3MmkfLy-OYuyv93XQ1EC35eqfJYQF5O2uxY"
+                                        width={40}
+                                        height={40}
                                     />
                                 </div>
                                 <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-300 overflow-hidden">
-                                    <img
-                                        data-alt="User profile avatar 2"
+                                    <Image
+                                        alt="User profile avatar 2"
                                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZl_npoXHm_qzoEjBVoCSzMrrUKjn_kiTKYESbDlI7c-JPxHGYcj9BC8KnNwN5k3Wa0z9PadR8klVI0pwtfJoumVZ1uIu-QM0DUH4_kpaCOIUFwhhRom-iL7vtTVJvK2hjYTduygVf8eXbI21xeE4vr5R7TzkYIK3h9Jp4zqo2BpVPqCRt2Os7UfWpETnWqn6KWI1wSAxU35k6wFfnS7Qh6z2E1PCw7AwdyctXX6SnwwRgQqr4Szral405rCOgqAeVekyhiz3cjnU"
+                                        width={40}
+                                        height={40}
                                     />
                                 </div>
                                 <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-300 overflow-hidden">
-                                    <img
-                                        data-alt="User profile avatar 3"
+                                    <Image
+                                        alt="User profile avatar 3"
                                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0g824y0AawvvzuHjCqUxUgFzZoD0pCF9hzwqzHuoa2jxfMTwUXmdYNG-vVdCPQv0n8up2Btqroe8z2zvbithhG9rKMT_qkUMU3mNGlQljvGs-KyN1yP0SjMxMsnOMf0cgv1xPXdYSN-C8gCXVxYnFKzPz_AJoFN5i5Dnbzn7M_8NWA8vkcJRqSAbSqsJEb0ohiunY603SFFUysqATCAJL9XZ35fo094u9T_lPFQnQ9yfWfeTzzCdFrBYMm2e2NDJtVh-Rd82EY_o"
+                                        width={40}
+                                        height={40}
                                     />
                                 </div>
                                 <div className="w-10 h-10 rounded-full border-2 border-white bg-primary flex items-center justify-center text-xs font-bold text-sage">

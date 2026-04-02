@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 
 /*
  * 5 diagonal lines across the viewport, each with 2 SVG icons.
@@ -197,9 +198,11 @@ export default function DiagonalEncounter({
                                     animation: bobbing ? "iconBob 2s ease-in-out infinite" : "none",
                                 }}
                             >
-                                <img
+                                <Image
                                     src={line.icon0}
-                                    alt=""
+                                    alt="Diagonal Icon"
+                                    width={40}
+                                    height={40}
                                     style={{ width: "100%", height: "100%", objectFit: "contain" }}
                                 />
                             </div>
@@ -227,9 +230,11 @@ export default function DiagonalEncounter({
                                     animation: bobbing ? "iconBob 2s ease-in-out infinite 0.5s" : "none",
                                 }}
                             >
-                                <img
+                                <Image
                                     src={line.icon1}
-                                    alt=""
+                                    alt="Diagonal Icon"
+                                    width={40}
+                                    height={40}
                                     style={{ width: "100%", height: "100%", objectFit: "contain" }}
                                 />
                             </div>

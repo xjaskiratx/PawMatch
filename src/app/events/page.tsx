@@ -1,6 +1,7 @@
 import Navbar from "../../components/Navbar";
 import MobileBottomNav from "../../components/MobileBottomNav";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Events() {
     return (
@@ -57,10 +58,12 @@ export default function Events() {
                 {/* Expanded Event Card */}
                 <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700">
                     <div className="h-48 w-full bg-slate-200 relative">
-                        <img
+                        <Image
                             alt="Dogs playing in a park"
                             className="w-full h-full object-cover"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2D7t1bdslHaXMRJzLtkx5e-e98fLOFg8zwynErIXTy8R_UlKnZtf7WaKNGgspt5plFeK-J7VuEapL8jKJc130i9F58kGLVLQzp0UVDqk2VG9gWtmjG1rqTyIV4TYr1JLEomqLz5I5FCKbyGcJJBquVZJr6oZj9U7MvSmKMEdhoHlPbjlckDabuS5s6nE50A_ZkcWPbLlKm06g7k5adc7LSEe5ovfAkdldHeiWlg16a0VvZq4FLxuqg6rNqw6xNP18AxaGyDoH2NY"
+                            width={800}
+                            height={400}
                         />
                         <div className="absolute top-3 right-3 bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full border border-green-200">
                             8/20 spots
@@ -105,10 +108,12 @@ export default function Events() {
                 {/* Another Event Preview */}
                 <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 flex gap-4">
                     <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                        <img
+                        <Image
                             alt="Cat cafe meetup"
                             className="w-full h-full object-cover"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuD14Aba_YLSG214DQC-7RiGj5b3JHhLxPlViZKYl5AKcGfrNlzuQArkihiub2NZz1dkLLCXZjPa-eufb3aEitsfMnF_pxJR-mR6oecECT85iZNFiUHA6FAoNoPsEE3eWF4z_q1kcl-s5ZGgzzpmrYc9jXmfy7Izb5SoMoBq1rhjJQm5xAU1_-DwY18dFmYdScztIhd5s3lyZs0FgREJMtNfrJ8DgNIT-DsaXunOVdy6khlyjoltIYpcwEpXH7Dl9IWunIqyHj846KQ"
+                            width={100}
+                            height={100}
                         />
                     </div>
                     <div className="flex-1">

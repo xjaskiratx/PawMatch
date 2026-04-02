@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 /*
  * Cinematic Dog Encounter Component (Refined Phase 6b)
@@ -23,7 +24,6 @@ export default function CinematicDogs({
   scale?: number;
 }) {
   const [show, setShow] = useState(false);
-  const text = "Let the paws do the talking";
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -88,7 +88,7 @@ export default function CinematicDogs({
         style={{ transform: `scale(${scale})`, transformOrigin: "center" }}
       >
         <div className="w-full h-full animate-dog0">
-          <img src="/dog0.svg" alt="" className="w-full h-full object-contain" />
+          <Image src="/dog0.svg" alt="Left Dog" width={450} height={450} className="w-full h-full object-contain" />
         </div>
       </div>
 
@@ -98,7 +98,7 @@ export default function CinematicDogs({
         style={{ transform: `scale(${scale})`, transformOrigin: "center" }}
       >
         <div className="w-full h-full animate-dog1">
-          <img src="/dog1.svg" alt="" className="w-full h-full object-contain" />
+          <Image src="/dog1.svg" alt="Right Dog" width={450} height={450} className="w-full h-full object-contain" />
         </div>
       </div>
 
@@ -109,9 +109,11 @@ export default function CinematicDogs({
       >
         <div className="opacity-0 animate-bubblePop">
           <div className="relative w-[600px] h-[180px]">
-            <img
+            <Image
               src="/bubble.svg"
-              alt=""
+              alt="Speech Bubble"
+              width={600}
+              height={180}
               className="w-full h-full object-fill drop-shadow-2xl"
             />
             <div className="absolute inset-0 flex items-center justify-center pt-12 pb-16 px-12">

@@ -19,7 +19,6 @@ const PHASE_1_SCROLL_LENGTH = 1600;
 const PHASE_2_SCROLL_LENGTH = 1200;
 const PHASE_2_SQUISH_START = 400;
 const PHASE_2_START = PHASE_1_SCROLL_LENGTH;
-const TOTAL_SCROLL_HEIGHT = PHASE_2_START + PHASE_2_SCROLL_LENGTH;
 const HERO_FINAL_RANGE = DIAGONAL_TRIGGER - HERO_FINAL_START;
 const HERO_VERTICAL_MULTIPLIER = 500 / HERO_FINAL_RANGE;
 const HERO_HORIZONTAL_MULTIPLIER = 1000 / HERO_FINAL_RANGE;
@@ -502,7 +501,7 @@ export default function Home() {
   const gridProgress = Math.min(Math.max((phase2ScrollY - 800) / 400, 0), 1);
   const finalPetGridOpacity = Math.pow(gridProgress, 6);
 
-  const handleGlobalClick = (e: React.MouseEvent) => {
+  const handleGlobalClick = () => {
     if (isClicked) return;
     setIsClicked(true);
     // Use trailingPos for visual lock with paw, not raw mouse e.clientX

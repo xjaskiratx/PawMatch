@@ -12,7 +12,7 @@ export default function LiquidFooter({ scrollY, visible }: { scrollY: number, vi
         if (isExpanded) {
             startScrollYRef.current = scrollY;
         }
-    }, [isExpanded]);
+    }, [isExpanded, scrollY]);
 
     // Track scroll delta when expanded
     useEffect(() => {
@@ -63,6 +63,7 @@ export default function LiquidFooter({ scrollY, visible }: { scrollY: number, vi
                 isolation: "isolate"
             }}
         >
+
             {/* Pill Content (Minimized) - Centered perfectly */}
             <div className={`absolute inset-0 flex items-center justify-center gap-3 transition-all ${isExpanded ? 'opacity-0 scale-90 blur-xl pointer-events-none duration-300' : 'opacity-100 scale-100 blur-0 duration-500 delay-100'}`}
                  style={{ transitionTimingFunction: isExpanded ? 'ease-out' : 'cubic-bezier(0.15, 1.3, 0.1, 1)' }}>

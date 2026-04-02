@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 export default function PostSecondScrollBentoGrid({
   opacity = 1,
@@ -397,7 +398,7 @@ function PillarContent({
         <div className="max-w-4xl mx-auto text-center space-y-12">
           <div className="inline-block p-1 rounded-full bg-white/10 mb-4 scale-110">
             <div className="w-28 h-28 rounded-full bg-white/20 overflow-hidden lg:w-36 lg:h-36">
-              <img src="/AboutTheFounder.png" alt="Founder" className="w-full h-full object-cover grayscale opacity-80" />
+              <Image src="/AboutTheFounder.png" alt="Founder" width={144} height={144} className="w-full h-full object-cover grayscale opacity-80" />
             </div>
           </div>
           <p className="text-3xl font-medium text-white/90 leading-[1.3] text-balance italic px-12 lg:text-4xl">

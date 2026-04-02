@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 
 export default function BackgroundSequence() {
     const [stage, setStage] = useState<1 | 2 | 3>(1);
@@ -49,10 +50,11 @@ export default function BackgroundSequence() {
         <div className="fixed inset-0 -z-50 w-full h-full overflow-hidden bg-black">
             {/* Final Image (Always at bottom, ready to be revealed) */}
             <div className="absolute inset-0">
-                <img
+                <Image
                     src="/SkinBackground.png"
                     alt="Background"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                 />
             </div>
 
