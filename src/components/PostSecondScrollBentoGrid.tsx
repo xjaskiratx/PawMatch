@@ -130,7 +130,7 @@ export default function PostSecondScrollBentoGrid({
 
   return (
     <div
-      className="fixed inset-0 pointer-events-none z-160"
+      className="fixed inset-0 pointer-events-none z-[160]"
       style={{
         opacity,
         transition: "opacity 600ms cubic-bezier(0.16, 1, 0.3, 1)",
@@ -165,9 +165,8 @@ export default function PostSecondScrollBentoGrid({
             transformOrigin: "center",
           }}
         >
-          {/* 4-Column Accordion */}
           <div
-            className="flex w-full h-full gap-6 pointer-events-auto"
+            className={`flex w-full h-full gap-6 transition-opacity duration-500 ${visible ? 'pointer-events-auto' : 'pointer-events-none'}`}
             style={{ willChange: "flex" }}
             onMouseLeave={() => !activeCol && setHoveredIndex(null)}
           >
