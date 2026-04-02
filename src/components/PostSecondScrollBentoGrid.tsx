@@ -761,7 +761,7 @@ function PillarContent({
 
                     const subject = encodeURIComponent(`${collabType} Collaboration: ${cleanSubject}`);
                     const body = encodeURIComponent(cleanMessage);
-                    window.location.href = `mailto:hello@pawmatch.in?subject=${subject}&body=${body}`;
+                    window.location.href = `mailto:jaskirat06jan@gmail.com?subject=${subject}&body=${body}`;
                   }}
                   className={`w-full font-black uppercase tracking-widest py-5 rounded-full text-lg shadow-xl transition-all
                     ${collabError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-primary hover:text-white'}
@@ -845,7 +845,7 @@ function PillarContent({
 
                     const subject = encodeURIComponent(`Contributor Inquiry (${contributorType}): ${cleanSubject}`);
                     const body = encodeURIComponent(cleanMessage);
-                    window.location.href = `mailto:hello@pawmatch.in?subject=${subject}&body=${body}`;
+                    window.location.href = `mailto:jaskirat06jan@gmail.com?subject=${subject}&body=${body}`;
                   }}
                   className={`w-full font-black uppercase tracking-widest py-5 rounded-full text-lg shadow-xl transition-all
                     ${contributorError ? 'bg-red-500 text-white animate-shake' : 'bg-white text-black hover:bg-primary hover:text-white'}
