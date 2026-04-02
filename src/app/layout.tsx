@@ -15,9 +15,6 @@ const bayon = Bayon({
 export const metadata: Metadata = {
   title: "PawMatch - Meet Local Pet Lovers",
   description: "Ludhiana's favorite casual meetup club for pet owners and enthusiasts.",
-  icons: {
-    icon: "/icon.png",
-  },
   openGraph: {
     title: "PawMatch - Meet Local Pet Lovers",
     description: "Ludhiana's favorite casual meetup club for pet owners and enthusiasts.",
