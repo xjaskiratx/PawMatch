@@ -508,7 +508,7 @@ function PillarContent({
                 <div className="space-y-6">
                   <div className="flex flex-col items-center gap-4">
                     <a
-                      href="https://ig.me/m/pawmatch.in"
+                      href="https://ig.me/m/xjaskiratx"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-2xl font-black text-primary uppercase tracking-widest leading-relaxed hover:text-white transition-colors lg:text-3xl underline decoration-2 underline-offset-8"
